@@ -1,0 +1,35 @@
+# ~/.config/swayimg/config
+
+[general]
+mode = viewer
+decoration = no
+
+[viewer]
+window = #000000ff
+scale = fit
+antialiasing = none
+preload = 10
+
+[list]
+all = yes
+loop = yes
+order = alpha
+recursive = no
+
+[info]
+show = no
+
+[info.viewer]
+top_left = 
+top_right = 
+bottom_left = 
+bottom_right = 
+
+[keys.viewer]
+Left = prev_file
+Right = next_file
+ScrollUp = zoom +10
+ScrollDown = zoom -10
+r = scale fit
+f = fullscreen
+Escape = exit

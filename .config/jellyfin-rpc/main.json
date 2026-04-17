@@ -1,0 +1,57 @@
+{
+    "jellyfin": {
+        "url": "https://localhost:8920",
+        "self_signed_cert": true,
+        "api_key": "ffc90a76c13e4555a463be0a29659512",
+        "username": "ELECTRO",
+        "music": {
+            "display": {
+                "details_text": "{track}",
+                "state_text": "{artists}",
+                "image_text": "{album} ({year})"
+            },
+            "separator": "|",
+            "status_display_type": "name"
+        },
+        "episodes": {
+            "display": {
+                "details_text": "{show-title}",
+                "state_text": "S{season}E{episode} {sep} {title}",
+                "image_text": "{show-title} ({year})"
+            },
+            "separator": "•",
+            "status_display_type": "name"
+        },
+        "movies": {
+            "display": {
+                "details_text": "{title} ({year})",
+                "state_text": "{critic-score} {sep} {community-score}",
+                "image_text": "{title} ({year})"
+            },
+            "separator": "•",
+            "status_display_type": "name"
+        }
+    },
+    "discord": {
+        "application_id": "1361383130434371826",
+        "buttons": [
+            {
+                "name": "dynamic",
+                "url": "dynamic"
+            },
+            {
+                "name": "dynamic",
+                "url": "dynamic"
+            }
+        ]
+    },
+    "imgur": {
+        "client_id": "4531acc15330a4d"
+    },
+    "images": {
+        "enable_images": true,
+        "imgur_images": true,
+        "litterbox_images": false,
+        "process_images": false
+    }
+}

@@ -1,0 +1,11 @@
+[user]
+	name = ItzELECTR0
+	email = electro@electris.net
+[pull]
+	rebase = merges
+[core]
+	excludesfile = ~/.gitignore_global
+[color]
+	ui = auto
+[init]
+	defaultBranch = main
