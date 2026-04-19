@@ -46,31 +46,31 @@ wheel_scroll_multiplier 3.0
 # -------------------------
 # Colors
 # -------------------------
-# foreground #e8d5c4
-# cursor #ff8c42
-# cursor_text_color #1a1410
-# selection_foreground #1a1410
-# selection_background #ff8c42
+foreground #e8d5c4
+cursor #ff8c42
+cursor_text_color #1a1410
+selection_foreground #1a1410
+selection_background #ff8c42
 
 # Normal colors
-# color0  #b8b8b8
-# color1  #ff6a3d
-# color2  #95d5b2
-# color3  #ffb84d
-# color4  #a8c5e6
-# color5  #e6a8c5
-# color6  #8ecfd4
-# color7  #e8e8e8
+color0  #b8b8b8
+color1  #ff6a3d
+color2  #95d5b2
+color3  #ffb84d
+color4  #a8c5e6
+color5  #e6a8c5
+color6  #8ecfd4
+color7  #e8e8e8
 
 # Bright colors
-# color8  #d4d4d4
-# color9  #ff8547
-# color10 #b8e6cf
-# color11 #ffc966
-# color12 #c5daf5
-# color13 #f5c5da
-# color14 #ade6eb
-# color15 #f5f5f5
+color8  #d4d4d4
+color9  #ff8547
+color10 #b8e6cf
+color11 #ffc966
+color12 #c5daf5
+color13 #f5c5da
+color14 #ade6eb
+color15 #f5f5f5
 
 # -------------------------
 # Key Bindings
@@ -88,8 +88,3 @@ map ctrl+0 change_font_size all 0
 # -------------------------
 mouse_hide_wait 3.0
 mouse_map right press ungrabbed combine : copy_to_clipboard : clear_selection : paste_from_clipboard
-
-# BEGIN_KITTY_THEME
-# Noctalia
-include current-theme.conf
-# END_KITTY_THEME

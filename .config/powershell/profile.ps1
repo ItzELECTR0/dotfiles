@@ -474,7 +474,7 @@ function Open-Directory {
     )
 
     if (Get-Command xdg-open -ErrorAction SilentlyContinue) {
-        xdg-open $Path
+        Start-Process "xdg-open" -ArgumentList $Path
     } else {
         Write-LogOutput "xdg-open not found. Cannot open directory in file manager."
     }
@@ -1010,7 +1010,7 @@ function Start-ELTS {
         [switch]$og, [switch]$go
     )
 
-    Set-Location "$HOME/Development/Projects/electris.net"
+    cd "$HOME/Development/Projects/electris.net"
     Start-CustomClear
     Write-LogOutput "Welcome! Heart like a pen, On paper it bleeds."
     Write-Host "Here's what's changed:`n"; git status; Write-Host ""

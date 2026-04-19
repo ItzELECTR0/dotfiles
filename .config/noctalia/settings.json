@@ -24,7 +24,6 @@
             "io.element.Element",
             "com.heroicgameslauncher.hgl",
             "modrinth-app",
-            "veracrypt",
             "Wondershare Filmora 15",
             "org.jellyfin.JellyfinDesktop",
             "Waydroid",
@@ -32,7 +31,8 @@
             "vscodium-insiders",
             "com.stremio.Stremio",
             "obsidian",
-            "com.obsproject.Studio"
+            "com.obsproject.Studio",
+            "VeraCrypt"
         ],
         "position": "center",
         "screenshotAnnotationTool": "",
@@ -234,6 +234,9 @@
                         {
                             "iconColor": "primary",
                             "id": "SessionMenu"
+                        },
+                        {
+                            "id": "plugin:obs-control"
                         }
                     ]
                 }
@@ -266,6 +269,28 @@
                     "showBadge": true,
                     "showLabelsOnlyWhenOccupied": false,
                     "unfocusedIconsOpacity": 1
+                },
+                {
+                    "defaultSettings": {
+                        "autoCloseManagedObs": true,
+                        "barLabelMode": "short-label",
+                        "launchBehavior": "minimized-to-tray",
+                        "leftClickAction": "panel",
+                        "openVideosAfterStop": true,
+                        "pollIntervalMs": 2500,
+                        "showBarWhenReady": true,
+                        "showBarWhenRecording": true,
+                        "showBarWhenReplay": false,
+                        "showBarWhenStreaming": true,
+                        "showControlCenterWhenReady": false,
+                        "showControlCenterWhenRecording": true,
+                        "showControlCenterWhenReplay": true,
+                        "showControlCenterWhenStreaming": true,
+                        "showElapsedInBar": false,
+                        "videosOpener": "xdg-open",
+                        "videosPath": ""
+                    },
+                    "id": "plugin:obs-control"
                 }
             ],
             "left": [
@@ -640,7 +665,7 @@
         "analogClockInCalendar": true,
         "autoLocate": false,
         "firstDayOfWeek": 1,
-        "hideWeatherCityName": false,
+        "hideWeatherCityName": true,
         "hideWeatherTimezone": false,
         "name": "Hârșova, Constanța, România",
         "showCalendarEvents": true,
@@ -663,12 +688,12 @@
         "wifiDetailsViewMode": "grid"
     },
     "nightLight": {
-        "autoSchedule": false,
+        "autoSchedule": true,
         "dayTemp": "6500",
-        "enabled": true,
+        "enabled": false,
         "forced": false,
         "manualSunrise": "07:00",
-        "manualSunset": "20:00",
+        "manualSunset": "22:30",
         "nightTemp": "3000"
     },
     "noctaliaPerformance": {
@@ -798,11 +823,11 @@
     "systemMonitor": {
         "batteryCriticalThreshold": 5,
         "batteryWarningThreshold": 20,
-        "cpuCriticalThreshold": 90,
-        "cpuWarningThreshold": 80,
+        "cpuCriticalThreshold": 100,
+        "cpuWarningThreshold": 95,
         "criticalColor": "#d95757",
-        "diskAvailCriticalThreshold": 10,
-        "diskAvailWarningThreshold": 20,
+        "diskAvailCriticalThreshold": 5,
+        "diskAvailWarningThreshold": 30,
         "diskCriticalThreshold": 90,
         "diskWarningThreshold": 80,
         "enableDgpuMonitoring": true,
@@ -813,8 +838,8 @@
         "memWarningThreshold": 80,
         "swapCriticalThreshold": 90,
         "swapWarningThreshold": 80,
-        "tempCriticalThreshold": 90,
-        "tempWarningThreshold": 80,
+        "tempCriticalThreshold": 80,
+        "tempWarningThreshold": 70,
         "useCustomColors": false,
         "warningColor": "#39bae6"
     },
@@ -842,7 +867,11 @@
             },
             {
                 "enabled": true,
-                "id": "steam"
+                "id": "hyprtoolkit"
+            },
+            {
+                "enabled": true,
+                "id": "kitty"
             }
         ],
         "enableUserTheming": false
