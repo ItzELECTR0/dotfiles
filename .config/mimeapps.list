@@ -214,3 +214,4 @@ inode/directory=thunar.desktop
 
 [Added Associations]
 application/x-zerosize=vscodium-insiders.desktop;
+application/x-bat=vscodium-insiders.desktop;

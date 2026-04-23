@@ -481,7 +481,7 @@ function Open-Directory {
 }
 
 function Start-MediaManagement {
-    bash -c "$HOME/.scripts/mediactl.sh"
+    bash -c "$HOME/.dotfiles/scripts/mediactl.sh"
 }
 
 function Install-Icon {
