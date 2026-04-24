@@ -11,7 +11,7 @@
 # post_hook = "myapp --reload-theme"
 
 # Remove this section and add your own templates
-#[templates.placeholder]
-#input_path = "/etc/xdg/quickshell/noctalia-shell/Assets/Templates/noctalia.json"
-#output_path = "/home/ELECTRO/.cache/noctalia/placeholder.json"
 
+[templates.wofi]
+input_path = "~/.config/noctalia/templates/wofi.css"
+output_path = "~/.config/wofi/style.css"

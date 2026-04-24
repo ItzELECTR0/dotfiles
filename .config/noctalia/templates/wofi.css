@@ -1,0 +1,54 @@
+window {
+    background-color: {{colors.surface.default.hex}};
+    border: 1px solid {{colors.outline_variant.default.hex}};
+    border-radius: 12px;
+    font-family: "Sans", monospace;
+    font-size: 14px;
+}
+
+#input {
+    background-color: {{colors.surface_container.default.hex}};
+    color: {{colors.on_surface.default.hex}};
+    border: 1px solid {{colors.outline_variant.default.hex}};
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 10px;
+    outline: none;
+}
+
+#input:focus {
+    border-color: {{colors.primary.default.hex}};
+}
+
+#scroll {
+    margin: 0 8px 8px 8px;
+}
+
+#inner-box {
+    background: transparent;
+}
+
+#outer-box {
+    padding: 4px;
+}
+
+.entry {
+    background-color: transparent;
+    color: {{colors.on_surface.default.hex}};
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 2px 0;
+}
+
+.entry:selected {
+    background-color: {{colors.primary_container.default.hex}};
+    color: {{colors.on_primary_container.default.hex}};
+}
+
+.entry:hover {
+    background-color: {{colors.surface_container_high.default.hex}};
+}
+
+image {
+    margin-right: 8px;
+}
