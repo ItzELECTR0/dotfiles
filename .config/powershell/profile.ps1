@@ -941,29 +941,57 @@ function Update-EFIstub {
 
 function Update-ElectricAUR {
     param (
-        [string]$RepoRoot = "$HOME/Development/.electric-aur",
-        [string]$DbName = "electric-aur.db.tar.gz"
+        [string]$RepoPath = "$HOME/Development/.electric-aur",
+        [string]$RepoName = "electric-aur"
     )
 
-    # Resolve absolute path for pacman
-    $RepoRoot = (Resolve-Path $RepoRoot).Path
-
-    # Collect all package files recursively
-    $pkgFiles = Get-ChildItem -Path $RepoRoot -Recurse -Filter *.pkg.tar.zst | ForEach-Object { $_.FullName }
-
-    if (-not $pkgFiles) {
-        Write-Warning "No .pkg.tar.zst packages found under $RepoRoot"
+    if (-not (Test-Path $RepoPath)) {
+        Write-Error "Path does not exist: $RepoPath"
         return
     }
 
-    # Build full path to database file
-    $dbPath = Join-Path $RepoRoot $DbName
+    Push-Location $RepoPath
 
-    # Run repo-add
-    Write-Host "Updating repository database at $dbPath..."
-    & repo-add $dbPath $pkgFiles
+    $repoDb = "$RepoName.db.tar.gz"
 
-    Write-Host "Repository database updated successfully."
+    $packages = Get-ChildItem -Filter "*.pkg.tar.*"
+
+    if ($packages.Count -eq 0) {
+        Write-Warning "No packages found."
+        Pop-Location
+        return
+    }
+
+    if (Test-Path $repoDb) {
+        Write-Host "Cleaning old entries from repo..."
+
+        $currentEntries = tar -xOf $repoDb */desc 2>$null |
+            Select-String "%NAME%" -Context 0,1 |
+            ForEach-Object { $_.Context.PostContext[0].Trim() }
+
+        $currentPkgNames = $packages | ForEach-Object {
+            tar -xOf $_ .PKGINFO 2>$null |
+            Select-String "^pkgname = " |
+            ForEach-Object { ($_ -split " = ")[1].Trim() }
+        }
+
+        $currentPkgNames = $currentPkgNames | Sort-Object -Unique
+
+        foreach ($entry in $currentEntries) {
+            if ($entry -notin $currentPkgNames) {
+                Write-Host "Removing stale package: $entry"
+                repo-remove $repoDb $entry | Out-Null
+            }
+        }
+    }
+
+    Write-Host "Adding/updating packages..."
+
+    repo-add $repoDb ($packages | ForEach-Object { $_.Name })
+
+    Write-Host "Repository updated: $repoDb"
+
+    Pop-Location
 }
 
 function Update-Flatpak {

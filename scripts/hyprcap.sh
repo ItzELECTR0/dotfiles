@@ -1,46 +1,68 @@
 #!/usr/bin/env bash
 
-# Detect recording state
-is_recording=false
-if pgrep -f "hyprcap.*rec" > /dev/null; then
-    is_recording=true
+STATE_FILE="/tmp/hyprcap-recording"
+
+# Read current recording state
+recording_type=""
+if [ -f "$STATE_FILE" ]; then
+    recording_type=$(cat "$STATE_FILE")
 fi
 
-# Build menu dynamically
-if [ "$is_recording" = true ]; then
-    options="󰓛 Stop Recording
-󰆞 Region Screenshot
-󰑋 Region Recording
+# Build menu based on state
+if [ "$recording_type" = "region" ]; then
+    options="󰆞 Take Region Screenshot
+󰓛 Stop Region Recording
 󰖯 Window Screenshot
-󰕧 Window Recording"
+󰕧 Start Window Recording"
+elif [ "$recording_type" = "window" ]; then
+    options="󰆞 Take Region Screenshot
+󰑋 Start Region Recording
+󰖯 Window Screenshot
+󰓛 Stop Window Recording"
 else
-    options="󰆞 Region Screenshot
-󰑋 Region Recording
+    options="󰆞 Take Region Screenshot
+󰑋 Start Region Recording
 󰖯 Window Screenshot
-󰕧 Window Recording"
+󰕧 Start Window Recording"
 fi
 
 choice=$(printf "%s\n" "$options" | wofi --dmenu --insensitive --prompt "HyprCap")
 
-case "$choice" in
-    *Stop\ Recording*)
-        hyprcap rec-stop -n -o $XDG_VIDEOS_DIR/Captures -c
-        ;;
+start_recording() {
+    local type="$1"
+    pkill -f "hyprcap.*rec" 2>/dev/null
+    echo "$type" > "$STATE_FILE"
+    hyprcap rec-start "$type" 
+}
 
-    *Region\ Screenshot*)
+stop_recording() {
+    pkill -f "hyprcap.*rec" 2>/dev/null
+    rm -f "$STATE_FILE"
+    hyprcap rec-stop -n -o $XDG_VIDEOS_DIR/Captures -c
+}
+
+case "$choice" in
+    *Take\ Region\ Screenshot*)
         hyprcap shot region -n -o $XDG_PICTURES_DIR/Screenshots -c
         ;;
 
-    *Region\ Recording*)
-        hyprcap rec-start -n region
+    *Start\ Region\ Recording*)
+        start_recording region
+        ;;
+
+    *Stop\ Region\ Recording*)
+        stop_recording
         ;;
 
     *Window\ Screenshot*)
         hyprcap shot window -n -o $XDG_PICTURES_DIR/Screenshots -c
         ;;
 
-    *Window\ Recording*)
-        hyprcap rec-start window
+    *Start\ Window\ Recording*)
+        start_recording window
         ;;
-        
+
+    *Stop\ Window\ Recording*)
+        stop_recording
+        ;;
 esac

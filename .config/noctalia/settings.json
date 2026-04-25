@@ -32,7 +32,8 @@
             "com.stremio.Stremio",
             "obsidian",
             "com.obsproject.Studio",
-            "VeraCrypt"
+            "VeraCrypt",
+            "librewolf"
         ],
         "position": "center",
         "screenshotAnnotationTool": "",
@@ -88,158 +89,7 @@
             {
                 "enabled": false,
                 "name": "HDMI-A-1",
-                "widgets": {
-                    "center": [
-                        {
-                            "characterCount": 2,
-                            "colorizeIcons": false,
-                            "emptyColor": "secondary",
-                            "enableScrollWheel": true,
-                            "focusedColor": "primary",
-                            "followFocusedScreen": false,
-                            "groupedBorderOpacity": 1,
-                            "hideUnoccupied": false,
-                            "iconScale": 0.8,
-                            "id": "Workspace",
-                            "labelMode": "name",
-                            "occupiedColor": "secondary",
-                            "pillSize": 0.7000000000000001,
-                            "showApplications": false,
-                            "showBadge": true,
-                            "showLabelsOnlyWhenOccupied": false,
-                            "unfocusedIconsOpacity": 1
-                        }
-                    ],
-                    "left": [
-                        {
-                            "clockColor": "none",
-                            "customFont": "",
-                            "formatHorizontal": "HH:mm:ss | dddd | MMM dd",
-                            "formatVertical": "HH mm - dd MM",
-                            "id": "Clock",
-                            "tooltipFormat": "yyyy-MM-dd",
-                            "useCustomFont": false
-                        },
-                        {
-                            "colorizeIcons": true,
-                            "hideMode": "hidden",
-                            "id": "ActiveWindow",
-                            "maxWidth": 165,
-                            "scrollingMode": "hover",
-                            "showIcon": false,
-                            "textColor": "none",
-                            "useFixedWidth": false
-                        },
-                        {
-                            "colorName": "primary",
-                            "hideWhenIdle": false,
-                            "id": "AudioVisualizer",
-                            "width": 64
-                        }
-                    ],
-                    "right": [
-                        {
-                            "compactMode": true,
-                            "diskPath": "/",
-                            "iconColor": "none",
-                            "id": "SystemMonitor",
-                            "showCpuFreq": false,
-                            "showCpuTemp": true,
-                            "showCpuUsage": true,
-                            "showDiskAvailable": false,
-                            "showDiskUsage": false,
-                            "showDiskUsageAsPercent": false,
-                            "showGpuTemp": false,
-                            "showLoadAverage": false,
-                            "showMemoryAsPercent": false,
-                            "showMemoryUsage": true,
-                            "showNetworkStats": false,
-                            "showSwapUsage": false,
-                            "textColor": "none",
-                            "useMonospaceFont": true,
-                            "usePadding": false
-                        },
-                        {
-                            "displayMode": "onhover",
-                            "iconColor": "none",
-                            "id": "Bluetooth",
-                            "textColor": "primary"
-                        },
-                        {
-                            "blacklist": [
-                            ],
-                            "chevronColor": "none",
-                            "colorizeIcons": false,
-                            "drawerEnabled": true,
-                            "hidePassive": false,
-                            "id": "Tray",
-                            "pinned": [
-                                "DiscordCanary",
-                                "steam",
-                                "Feishin",
-                                "Element | varrow"
-                            ]
-                        },
-                        {
-                            "applyToAllMonitors": false,
-                            "displayMode": "onhover",
-                            "iconColor": "none",
-                            "id": "Brightness",
-                            "textColor": "primary"
-                        },
-                        {
-                            "deviceNativePath": "__default__",
-                            "displayMode": "graphic-clean",
-                            "hideIfIdle": false,
-                            "hideIfNotDetected": true,
-                            "id": "Battery",
-                            "showNoctaliaPerformance": false,
-                            "showPowerProfiles": false
-                        },
-                        {
-                            "displayMode": "onhover",
-                            "iconColor": "none",
-                            "id": "Volume",
-                            "middleClickCommand": "pwvucontrol || pavucontrol",
-                            "textColor": "primary"
-                        },
-                        {
-                            "displayMode": "onhover",
-                            "iconColor": "none",
-                            "id": "KeyboardLayout",
-                            "showIcon": true,
-                            "textColor": "primary"
-                        },
-                        {
-                            "iconColor": "none",
-                            "id": "PowerProfile"
-                        },
-                        {
-                            "hideWhenZero": true,
-                            "hideWhenZeroUnread": false,
-                            "iconColor": "none",
-                            "id": "NotificationHistory",
-                            "showUnreadBadge": true,
-                            "unreadBadgeColor": "primary"
-                        },
-                        {
-                            "colorizeDistroLogo": false,
-                            "colorizeSystemIcon": "primary",
-                            "customIconPath": "/home/ELECTRO/Desktop/Stuff/ELECTRO/PFP/V10/PFP-V10_nobg.png",
-                            "enableColorization": true,
-                            "icon": "noctalia",
-                            "id": "ControlCenter",
-                            "useDistroLogo": false
-                        },
-                        {
-                            "iconColor": "primary",
-                            "id": "SessionMenu"
-                        },
-                        {
-                            "id": "plugin:obs-control"
-                        }
-                    ]
-                }
+                "widgets": null
             }
         ],
         "showCapsule": true,
@@ -371,7 +221,8 @@
                         "DiscordCanary",
                         "steam",
                         "Element | varrow",
-                        "Feishin"
+                        "Feishin",
+                        "Element"
                     ]
                 },
                 {
