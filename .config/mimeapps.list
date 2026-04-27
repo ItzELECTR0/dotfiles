@@ -211,6 +211,8 @@ image/x-xwindowdump=swayimg.desktop
 application/vnd.microsoft.portable-executable=wine.desktop
 application/x-zerosize=vscodium-insiders.desktop
 inode/directory=thunar.desktop
+x-scheme-handler/ror2mm=r2modman.desktop
+x-scheme-handler/gale=gale-handler.desktop
 
 [Added Associations]
 application/x-zerosize=vscodium-insiders.desktop;
