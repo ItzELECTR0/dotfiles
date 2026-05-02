@@ -4,7 +4,13 @@
   "showIpAddress": false,
   "showPeerCount": false,
   "hideDisconnected": true,
-  "terminalCommand": "",
+  "hideMullvadExitNodes": true,
+  "terminalCommand": "kitty",
+  "sshUsername": "ELECTRO",
   "pingCount": 5,
-  "defaultPeerAction": "copy-ip"
+  "defaultPeerAction": "copy-ip",
+  "taildropEnabled": true,
+  "taildropDownloadDir": "~/Downloads",
+  "taildropReceiveMode": "pkexec",
+  "loginServer": ""
 }

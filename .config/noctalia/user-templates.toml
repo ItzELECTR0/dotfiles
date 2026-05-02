@@ -15,3 +15,7 @@
 [templates.wofi]
 input_path = "~/.config/noctalia/templates/wofi.css"
 output_path = "~/.config/wofi/style.css"
+
+[templates.pandora]
+input_path = "~/.config/noctalia/templates/pandora.json"
+output_path = "~/.local/share/PandoraLauncher/themes/noctalia.json"

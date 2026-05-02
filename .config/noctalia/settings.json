@@ -23,7 +23,6 @@
             "7zFM",
             "io.element.Element",
             "com.heroicgameslauncher.hgl",
-            "modrinth-app",
             "Wondershare Filmora 15",
             "org.jellyfin.JellyfinDesktop",
             "Waydroid",
@@ -33,7 +32,8 @@
             "obsidian",
             "com.obsproject.Studio",
             "VeraCrypt",
-            "librewolf"
+            "librewolf",
+            "pandora-launcher"
         ],
         "position": "center",
         "screenshotAnnotationTool": "",
@@ -172,6 +172,25 @@
                 }
             ],
             "right": [
+                {
+                    "defaultSettings": {
+                        "compactMode": false,
+                        "defaultPeerAction": "copy-ip",
+                        "hideDisconnected": false,
+                        "hideMullvadExitNodes": true,
+                        "loginServer": "",
+                        "pingCount": 5,
+                        "refreshInterval": 5000,
+                        "showIpAddress": true,
+                        "showPeerCount": true,
+                        "sshUsername": "",
+                        "taildropDownloadDir": "~/Downloads",
+                        "taildropEnabled": true,
+                        "taildropReceiveMode": "operator",
+                        "terminalCommand": ""
+                    },
+                    "id": "plugin:tailscale"
+                },
                 {
                     "defaultSettings": {
                         "activeColor": "primary",

@@ -213,7 +213,9 @@ application/x-zerosize=vscodium-insiders.desktop
 inode/directory=thunar.desktop
 x-scheme-handler/ror2mm=r2modman.desktop
 x-scheme-handler/gale=gale-handler.desktop
+x-scheme-handler/mailto=chromium.desktop
 
 [Added Associations]
 application/x-zerosize=vscodium-insiders.desktop;
 application/x-bat=vscodium-insiders.desktop;
+text/x-ms-regedit=vscodium-insiders.desktop;

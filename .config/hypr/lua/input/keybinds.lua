@@ -1,0 +1,1 @@
+hl.bind("SUPER + S", hl.dsp.exec_cmd("feishin"))

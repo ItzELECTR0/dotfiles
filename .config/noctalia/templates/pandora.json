@@ -1,0 +1,162 @@
+{
+  "$schema": "https://github.com/longbridge/gpui-component/raw/refs/heads/main/.theme-schema.json",
+  "name": "Noctalia",
+  "author": "Noctalia",
+  "url": "",
+  "themes": [
+    {
+      "name": "Noctalia",
+      "mode": "dark",
+      "colors": {
+        "accent.background": "{{colors.surface_container_high.default.hex}}",
+        "accent.foreground": "{{colors.on_surface.default.hex}}",
+        "background": "{{colors.surface.default.hex}}",
+        "border": "{{colors.outline_variant.default.hex}}",
+        "danger.background": "{{colors.error.default.hex}}",
+        "foreground": "{{colors.on_surface.default.hex}}",
+        "input.border": "{{colors.outline.default.hex}}",
+        "link.active.foreground": "{{colors.primary.default.hex}}",
+        "link.foreground": "{{colors.primary.default.hex}}",
+        "link.hover.foreground": "{{colors.primary_container.default.hex}}",
+        "list.active.background": "{{colors.primary.default.hex}}22",
+        "list.active.border": "{{colors.primary.default.hex}}",
+        "list.even.background": "{{colors.surface_container.default.hex}}",
+        "muted.background": "{{colors.surface_container.default.hex}}",
+        "muted.foreground": "{{colors.on_surface_variant.default.hex}}",
+        "panel.background": "{{colors.surface_container_low.default.hex}}",
+        "popover.background": "{{colors.surface.default.hex}}",
+        "popover.foreground": "{{colors.on_surface.default.hex}}",
+        "primary.active.background": "{{colors.primary.default.hex}}99",
+        "primary.background": "{{colors.primary.default.hex}}",
+        "primary.foreground": "{{colors.on_primary.default.hex}}",
+        "primary.hover.background": "{{colors.primary.default.hex}}aa",
+        "scrollbar.background": "{{colors.surface_container_low.default.hex}}00",
+        "scrollbar.thumb.background": "{{colors.outline.default.hex}}",
+        "secondary.background": "{{colors.surface_container.default.hex}}",
+        "secondary.active.background": "{{colors.surface_container_high.default.hex}}",
+        "secondary.foreground": "{{colors.on_surface.default.hex}}",
+        "secondary.hover.background": "{{colors.surface_container_highest.default.hex}}",
+        "tab.active.background": "{{colors.surface.default.hex}}",
+        "tab.active.foreground": "{{colors.on_surface.default.hex}}",
+        "tab.background": "{{colors.surface.default.hex}}00",
+        "tab.foreground": "{{colors.on_surface_variant.default.hex}}",
+        "tab_bar.background": "{{colors.surface.default.hex}}",
+        "table.background": "{{colors.surface.default.hex}}",
+        "table.head.foreground": "{{colors.on_surface.default.hex}}b3",
+        "table.row.border": "{{colors.outline_variant.default.hex}}70",
+        "title_bar.background": "{{colors.surface_container_low.default.hex}}",
+        "ring": "{{colors.primary.default.hex}}",
+        "base.red": "{{colors.error.default.hex}}",
+        "base.red.light": "{{colors.error_container.default.hex}}",
+        "base.green": "{{colors.tertiary.default.hex}}",
+        "base.green.light": "{{colors.tertiary_container.default.hex}}",
+        "base.blue": "{{colors.primary.default.hex}}",
+        "base.blue.light": "{{colors.primary_container.default.hex}}",
+        "base.cyan": "{{colors.secondary.default.hex}}",
+        "base.cyan.light": "{{colors.secondary_container.default.hex}}",
+        "base.magenta": "{{colors.tertiary.default.hex}}",
+        "base.magenta.light": "{{colors.tertiary_container.default.hex}}",
+        "base.yellow": "{{colors.secondary.default.hex}}",
+        "base.yellow.light": "{{colors.secondary_container.default.hex}}"
+      },
+      "highlight": {
+        "editor.foreground": "{{colors.on_surface.default.hex}}",
+        "editor.background": "{{colors.surface.default.hex}}",
+        "editor.active_line.background": "{{colors.surface_container.default.hex}}",
+        "editor.line_number": "{{colors.on_surface_variant.default.hex}}",
+        "editor.active_line_number": "{{colors.on_surface.default.hex}}",
+        "editor.invisible": "{{colors.on_surface_variant.default.hex}}66",
+        "conflict": "{{colors.error.default.hex}}",
+        "created": "{{colors.tertiary.default.hex}}",
+        "deleted": "{{colors.error.default.hex}}",
+        "error": "{{colors.error.default.hex}}",
+        "hidden": "{{colors.on_surface_variant.default.hex}}",
+        "hint": "{{colors.tertiary_container.default.hex}}",
+        "ignored": "{{colors.on_surface_variant.default.hex}}",
+        "info": "{{colors.primary.default.hex}}",
+        "modified": "{{colors.secondary.default.hex}}",
+        "predictive": "{{colors.on_surface_variant.default.hex}}",
+        "renamed": "{{colors.tertiary.default.hex}}",
+        "success": "{{colors.tertiary.default.hex}}",
+        "unreachable": "{{colors.on_surface_variant.default.hex}}",
+        "warning": "{{colors.secondary.default.hex}}",
+        "syntax": {
+          "attribute": {
+            "color": "{{colors.secondary.default.hex}}"
+          },
+          "boolean": {
+            "color": "{{colors.tertiary.default.hex}}"
+          },
+          "comment": {
+            "color": "{{colors.on_surface_variant.default.hex}}",
+            "font_style": "italic"
+          },
+          "comment.doc": {
+            "color": "{{colors.on_surface_variant.default.hex}}",
+            "font_style": "italic"
+          },
+          "constant": {
+            "color": "{{colors.error.default.hex}}"
+          },
+          "constructor": {
+            "color": "{{colors.secondary.default.hex}}"
+          },
+          "embedded": {
+            "color": "{{colors.on_surface.default.hex}}"
+          },
+          "function": {
+            "color": "{{colors.tertiary.default.hex}}"
+          },
+          "keyword": {
+            "color": "{{colors.primary.default.hex}}"
+          },
+          "link_text": {
+            "color": "{{colors.primary_container.default.hex}}",
+            "font_style": "normal"
+          },
+          "link_uri": {
+            "color": "{{colors.outline.default.hex}}",
+            "font_style": "italic"
+          },
+          "number": {
+            "color": "{{colors.error.default.hex}}"
+          },
+          "string": {
+            "color": "{{colors.tertiary.default.hex}}"
+          },
+          "string.escape": {
+            "color": "{{colors.tertiary.default.hex}}"
+          },
+          "string.regex": {
+            "color": "{{colors.tertiary.default.hex}}"
+          },
+          "string.special": {
+            "color": "{{colors.secondary.default.hex}}"
+          },
+          "string.special.symbol": {
+            "color": "{{colors.secondary.default.hex}}"
+          },
+          "tag": {
+            "color": "{{colors.secondary.default.hex}}"
+          },
+          "text.literal": {
+            "color": "{{colors.error.default.hex}}"
+          },
+          "title": {
+            "color": "{{colors.primary_container.default.hex}}",
+            "font_weight": 600
+          },
+          "type": {
+            "color": "{{colors.secondary.default.hex}}"
+          },
+          "property": {
+            "color": "{{colors.on_surface.default.hex}}"
+          },
+          "variable.special": {
+            "color": "{{colors.error.default.hex}}"
+          }
+        }
+      }
+    }
+  ]
+}

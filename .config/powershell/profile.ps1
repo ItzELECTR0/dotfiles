@@ -218,8 +218,6 @@ Set-Alias top btop
 Set-Alias resesh Restart-Session
 Set-Alias profile Edit-Profile
 Set-Alias hyprconf Edit-Hyprland
-Set-Alias wayconf Edit-WayBar
-Set-Alias anyconf Edit-AnyRun
 Set-Alias logs Edit-Logs
 
 # GIT SHORTCUTS
@@ -265,6 +263,7 @@ Set-Alias reboot-samurai Restart-Computer -Force
 
 # UTILITIES
 Set-Alias menu Show-Menu
+Set-Alias icoinst Install-Icon
 Set-Alias vencord Start-Vencord
 Set-Alias open Open-Directory
 
