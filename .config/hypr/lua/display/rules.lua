@@ -1,10 +1,10 @@
 ---[===Monitor=Workspace=Order===]---
-hl.workspace_rule(workspace = 1, monitor = "DP-1", default = true, persistent = true)
-hl.workspace_rule(workspace = 2, monitor = "DP-1", default = true, persistent = true)
-hl.workspace_rule(workspace = 3, monitor = "DP-1", default = true, persistent = true)
-hl.workspace_rule(workspace = 4, monitor = "HDMI-A-1", default = true, persistent = true)
-hl.workspace_rule(workspace = 5, monitor = "HDMI-A-1", default = true, persistent = true)
-hl.workspace_rule(workspace = 6, monitor = "HDMI-A-1", default = true, persistent = true)
+hl.workspace_rule({workspace = 1, monitor = "DP-1", default = true, persistent = true})
+hl.workspace_rule({workspace = 2, monitor = "DP-1", default = true, persistent = true})
+hl.workspace_rule({workspace = 3, monitor = "DP-1", default = true, persistent = true})
+hl.workspace_rule({workspace = 4, monitor = "HDMI-A-1", default = true, persistent = true})
+hl.workspace_rule({workspace = 5, monitor = "HDMI-A-1", default = true, persistent = true})
+hl.workspace_rule({workspace = 6, monitor = "HDMI-A-1", default = true, persistent = true})
 
 ---[===Layer=Rules===]---
 hl.layer_rule({match = {namespace = "noctalia-background-.*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})
@@ -66,8 +66,8 @@ hl.window_rule({match = {title = "Visual Studio Installer"}, float = true, cente
 hl.window_rule({match = {title = "Picture-in-Picture"}, float = true})
  
 ---[===Border=Colors===]---
-hl.window_rule({match = {title = ".*Hyprland.*"}, border_color = "rgb(FFFF00)"})
-hl.window_rule({match = {class = "librewolf", title = ".*Private Browsing.*"}, border_color = "rgb(a020f0)"})
+hl.window_rule({match = {title = ".*Hyprland.*", class = "negative:firefox|librewolf|chromium|helium"}, border_color = "rgb(FFFF00)"})
+hl.window_rule({match = {class = "[Ll]ibrewolf", title = ".*Private Browsing.*"}, border_color = "rgb(a020f0)"})
 hl.window_rule({match = {class = "[Ss]team|[Hh]eroic"}, border_color = "rgba(33ccffee)"})
 hl.window_rule({match = {title = "[Ss]team"}, border_color = "rgba(33ccffee)"})
 hl.window_rule({match = {class = "modrinth-app"}, border_color = "rgba(1bd96aff)"})

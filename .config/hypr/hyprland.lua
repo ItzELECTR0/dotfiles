@@ -1,55 +1,68 @@
---- ~/.config/hypr/hyprland.lua
+-- ~/.config/hypr/hyprland.lua
 
-----------------
----ANIMATIONS---
-----------------
+---------------
+--DIRECTORIES--
+---------------
+
+local home = os.getenv("HOME")
+dirs = {
+    home = home,
+    dotfiles = home .. "/.dotfiles",
+    scripts = home .. "/.dotfiles/scripts",
+    desktop = home .. "/.dotfiles/scripts/desktop",
+    config = home .. "/.config/hypr",
+}
+
+--------------
+--ANIMATIONS--
+--------------
 
 require("lua/animations/animation")
 
--------------
----DISPLAY---
--------------
+-----------
+--DISPLAY--
+-----------
 
 require("lua/display/monitors")
 require("lua/display/rules")
 
---------------
----PROGRAMS---
---------------
+------------
+--PROGRAMS--
+------------
 
 require("lua/programs/autostart")
 require("lua/programs/programs")
 
----------------
----VARIABLES---
----------------
+-------------
+--VARIABLES--
+-------------
 
 require("lua/variables/environment")
 require("lua/variables/misc")
 require("lua/variables/permissions")
 
------------
----THEME---
------------
+---------
+--THEME--
+---------
 
 require("lua/theme/border")
 require("lua/theme/theme")
 
------------
----INPUT---
------------
+---------
+--INPUT--
+---------
 
 require("lua/input/input")
 require("lua/input/keybinds")
 
--------------
----PLUGINS---
--------------
+-----------
+--PLUGINS--
+-----------
 
-require("lua/plugins/dynamic-cursors")
+--require("lua/plugins/dynamic-cursors")
 
--------------
----HYPRMOD---
--------------
+-----------
+--HYPRMOD--
+-----------
 
 require("hyprmod")

@@ -72,7 +72,7 @@
         "hideOnOverview": false,
         "marginHorizontal": 6,
         "marginVertical": 4,
-        "middleClickAction": "none",
+        "middleClickAction": "settings",
         "middleClickCommand": "",
         "middleClickFollowMouse": false,
         "monitors": [
@@ -84,7 +84,7 @@
         "reverseScroll": false,
         "rightClickAction": "controlCenter",
         "rightClickCommand": "",
-        "rightClickFollowMouse": true,
+        "rightClickFollowMouse": false,
         "screenOverrides": [
             {
                 "enabled": false,
