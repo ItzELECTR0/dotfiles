@@ -41,7 +41,7 @@ $username = $env:USER
 # Define System/Host Name
 $systemname = [System.Net.Dns]::GetHostName()
 
-# Define PATH
+# Define PATH & environment variables
 $env:PATH = "$HOME/.local/share/pnpm:$HOME/.local/bin:" + $env:PATH
 $env:PNPM_HOME = "$HOME/.local/share/pnpm"
 
@@ -213,6 +213,7 @@ Set-Alias c Clear-Host
 # EDITOR SHORTCUTS
 Set-Alias code codium-insiders
 Set-Alias cc codex
+# Set-Alias gemini agy
 Set-Alias lgit lazygit
 Set-Alias top btop
 Set-Alias resesh Restart-Session
@@ -239,11 +240,14 @@ Set-Alias twaos Start-TWAOS
 # INFORMATION
 Set-Alias ff fastfetch
 Set-Alias nf neofetch
+Set-Alias sysinf hyprsysteminfo
 
 # MAINTENANCE
 Set-Alias updboot Update-System
 Set-Alias updocker Start-DockerContainerUpdate
 Set-Alias updfeishin Update-Feishin
+Set-Alias updaur Update-AUR
+Set-Alias rebuild Update-AURgitPackage
 Set-Alias updeur Update-ElectricAUR
 Set-Alias updflat Update-Flatpak
 Set-Alias updsys Upgrade-System
@@ -254,6 +258,8 @@ Set-Alias mediactl Start-MediaManagement
 Set-Alias ytvid Start-YTDLP-Video
 Set-Alias ytaud Start-YTDLP-Audio
 Set-Alias ytsub Start-YTDLP-Subtitles
+Set-Alias compress Start-Compressing
+Set-Alias resolve Convert-ForResolve
 
 # POWER
 Set-Alias poweroff Stop-Computer
@@ -369,6 +375,57 @@ function Start-Git-Push {
 
 function Start-Git-Status {
     git status
+}
+
+function Start-Compressing {
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [string]$InputFile,
+
+        [Parameter(Position = 1)]
+        [int]$TargetSizeMiB = 10,
+
+        [Parameter(Position = 2)]
+        [int]$AudioBitrate = 320
+    )
+
+    $base = [System.IO.Path]::GetFileNameWithoutExtension($InputFile)
+    $output = "./${base}-compressed.mp4"
+
+    $duration = ffprobe -v error -show_entries format=duration -of csv=p=0 $InputFile
+    if (-not $duration) {
+        Write-Error "Failed to read duration from '$InputFile'"
+        return
+    }
+
+    $targetSizeBytes = $TargetSizeMiB * 1024 * 1024
+    $audioBitrateBps = $AudioBitrate * 1000
+
+    $videoBitrate = [math]::Max(
+        100000,
+        [math]::Round((($targetSizeBytes * 8) / [double]$duration) - $audioBitrateBps)
+    )
+    $bufsize = $videoBitrate * 2
+
+    $hasNvenc = ffmpeg -hide_banner -encoders 2>$null | Select-String -Quiet 'h265_nvenc'
+
+    $commonArgs = @(
+        '-c:a', 'aac', '-b:a', "${AudioBitrate}k",
+        '-movflags', '+faststart',
+        $output
+    )
+
+    if ($hasNvenc) {
+        ffmpeg -hwaccel auto -i $InputFile `
+            -c:v h265_nvenc -b:v $videoBitrate `
+            -maxrate $videoBitrate -bufsize $bufsize `
+            @commonArgs
+    } else {
+        ffmpeg -i $InputFile `
+            -c:v libx265 -b:v $videoBitrate `
+            -maxrate $videoBitrate -bufsize $bufsize `
+            @commonArgs
+    }
 }
 
 function hostname {
@@ -683,13 +740,9 @@ function Install-ADB {
 }
 
 function Restart-Session {
-    $p = Get-Process -Id $PID
-    $p | Select-Object -ExpandProperty Path | ForEach-Object { Invoke-Command { & "$_" } -NoNewScope }
-
-    If ($p.Parent.Name -eq $p.Name -and !($p.MainWindowTitle))
-    {
-        Stop-Process -Id $p.Parent.Id -Force
-    }
+    $pwsh = (Get-Process -Id $PID).Path
+    & $pwsh
+    exit
 }
 
 function Clear-CustOTALogs {
@@ -703,7 +756,7 @@ function wineprefix($prefix, $cmd, $args) {
 
 function Start-DockerContainerUpdate {
     param(
-        [string]$BasePath = "$HOME/Docker"
+        [string]$BasePath = "$HOME/.docker"
     )
     
     $containers = @(
@@ -802,7 +855,7 @@ function Start-DockerContainerUpdate {
     
     Write-Progress -Activity "Updating Docker Containers" -Completed
     Write-Host ""
-    Write-Host "All containers updated" -ForegroundColor Green -BackgroundColor Black
+    Write-Host "All containers updated" -ForegroundColor Green
 }
 
 function Update-Feishin {
@@ -938,6 +991,136 @@ function Update-EFIstub {
     Write-Host "EFI stub updated."
 }
 
+function Update-AUR {
+    paru -S --rebuild=all $(pacman -Qm | awk '$1 ~ /-git$/ {print $1}')
+}
+
+function Update-AURgitPackage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$PackageName,
+
+        [switch]$CleanBuild,
+
+        [switch]$NoConfirm
+    )
+
+    begin {
+        function Test-CommandExists {
+            param([string]$Name)
+
+            return $null -ne (Get-Command $Name -ErrorAction SilentlyContinue)
+        }
+
+        # Prefer paru over yay
+        $AurHelper = $null
+
+        if (Test-CommandExists "paru") {
+            $AurHelper = "paru"
+        }
+        elseif (Test-CommandExists "yay") {
+            $AurHelper = "yay"
+        }
+        else {
+            throw "Neither paru nor yay is installed or available in PATH."
+        }
+
+        if (-not (Test-CommandExists "git")) {
+            throw "git is not installed or not in PATH."
+        }
+
+        if (-not (Test-CommandExists "makepkg")) {
+            throw "makepkg is not installed or not in PATH."
+        }
+
+        Write-Host "Using AUR helper: $AurHelper" -ForegroundColor DarkGray
+    }
+
+    process {
+        Write-Host "Updating AUR package: $PackageName" -ForegroundColor Cyan
+
+        $cacheDir = Join-Path $HOME ".cache/$AurHelper/clone/$PackageName"
+
+        # If cache doesn't exist, do a fresh install/build
+        if (-not (Test-Path $cacheDir)) {
+            Write-Host "Package cache does not exist. Cloning/building fresh..." -ForegroundColor Yellow
+
+            $aurArgs = @(
+                "-S"
+                "--needed"
+                $PackageName
+            )
+
+            if ($NoConfirm) {
+                $aurArgs += "--noconfirm"
+            }
+
+            & $AurHelper @aurArgs
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "$AurHelper failed to install $PackageName"
+            }
+
+            return
+        }
+
+        Push-Location $cacheDir
+
+        try {
+            Write-Host "Pulling latest PKGBUILD changes..." -ForegroundColor Yellow
+
+            & git fetch --all --prune
+            & git reset --hard HEAD
+            & git clean -fdx
+            & git pull --rebase
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "git pull failed for $PackageName"
+            }
+
+            if ($CleanBuild) {
+                Write-Host "Cleaning old build artifacts..." -ForegroundColor Yellow
+
+                @("src", "pkg") |
+                    ForEach-Object {
+                        if (Test-Path $_) {
+                            Remove-Item $_ -Recurse -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+
+                Get-ChildItem -Force |
+                    Where-Object {
+                        $_.Name -match '\.pkg\.tar'
+                    } |
+                    Remove-Item -Force -ErrorAction SilentlyContinue
+            }
+
+            Write-Host "Rebuilding package..." -ForegroundColor Green
+
+            $makepkgArgs = @(
+                "-si"
+                "--force"
+            )
+
+            if ($NoConfirm) {
+                $makepkgArgs += "--noconfirm"
+            }
+
+            & makepkg @makepkgArgs
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "makepkg failed for $PackageName"
+            }
+
+            Write-Host "Successfully updated $PackageName" -ForegroundColor Green
+        }
+        finally {
+            Pop-Location
+        }
+    }
+}
+
 function Update-ElectricAUR {
     param (
         [string]$RepoPath = "$HOME/Development/.electric-aur",
@@ -1019,13 +1202,23 @@ function Upgrade-System {
 }
 
 function Start-TWAOS {
-    Set-Location "$HOME/Development/Projects/TWAOS"
+    param (
+        [switch]$open, [switch]$o,
+        [switch]$gemini, [switch]$g,
+        [switch]$og, [switch]$go
+    )
+
+    $doOpen   = $open -or $o -or $og -or $go
+    $doGemini = $gemini -or $g -or $og -or $go
+
+    Set-Location "$HOME/Development/Projects/Unity/TWAOS"
     Start-CustomClear
     Write-LogOutput "Welcome to the wonderful repository of Sip!"
-    Write-Host "Here's what's changed:"
-    Write-Host ""
-    git status
-    Write-Host ""
+    Write-Host "Here's what's changed:`n"; git status; Write-Host ""
+
+    if ($doOpen)   { code . }
+
+    if ($doGemini) { agy }
 }
 
 function Start-ELTS {
@@ -1034,19 +1227,42 @@ function Start-ELTS {
         [switch]$run,  [switch]$r,
         [switch]$gemini, [switch]$g,
         [switch]$or, [switch]$ro,
-        [switch]$og, [switch]$go
+        [switch]$og, [switch]$go,
+        [switch]$up, [switch]$down,
+        [switch]$u, [switch]$d,
+        [switch]$ud, [switch]$du
     )
-
-    cd "$HOME/Development/Projects/electris.net"
-    Start-CustomClear
-    Write-LogOutput "Welcome! Heart like a pen, On paper it bleeds."
-    Write-Host "Here's what's changed:`n"; git status; Write-Host ""
 
     $doOpen   = $open -or $o -or $or -or $ro -or $og -or $go
     $doRun    = $run  -or $r -or $or -or $ro
     $doGemini = $gemini -or $g -or $og -or $go
+    $doUp     = $u -or $up
+    $doDown     = $d -or $down
+    $doDocker = $u -and $d -or $du -or $ud
+
+    Set-Location "$HOME/Development/Projects/Web/electris.net"
+    Start-CustomClear
+    Write-LogOutput "Welcome! Heart like a pen, On paper it bleeds."
+    Write-Host "Here's what's changed:`n"; git status; Write-Host ""
 
     if ($doOpen)   { code . }
+
     if ($doRun)    { npm run dev }
-    if ($doGemini) { gemini }
+
+    if ($doGemini) { agy }
+
+    if ($doUp) {
+        docker compose build
+        docker compose up -d
+        docker system prune -f
+    }
+
+    if ($doDown) { docker compose down }
+
+    if ($doDocker) {
+        docker compose down
+        docker compose build
+        docker compose up -d
+        docker system prune -f
+    }
 }

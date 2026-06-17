@@ -33,7 +33,10 @@
             "com.obsproject.Studio",
             "VeraCrypt",
             "librewolf",
-            "pandora-launcher"
+            "pandora-launcher",
+            "helium-browser",
+            "feishin",
+            "virt-manager"
         ],
         "position": "center",
         "screenshotAnnotationTool": "",
@@ -84,7 +87,7 @@
         "reverseScroll": false,
         "rightClickAction": "controlCenter",
         "rightClickCommand": "",
-        "rightClickFollowMouse": false,
+        "rightClickFollowMouse": true,
         "screenOverrides": [
             {
                 "enabled": false,
@@ -163,12 +166,6 @@
                     "showText": true,
                     "textColor": "none",
                     "useFixedWidth": false
-                },
-                {
-                    "colorName": "primary",
-                    "hideWhenIdle": false,
-                    "id": "AudioVisualizer",
-                    "width": 66
                 }
             ],
             "right": [
@@ -203,6 +200,12 @@
                         "removeMargins": false
                     },
                     "id": "plugin:privacy-indicator"
+                },
+                {
+                    "displayMode": "onhover",
+                    "iconColor": "none",
+                    "id": "Network",
+                    "textColor": "none"
                 },
                 {
                     "displayMode": "onhover",
@@ -395,7 +398,7 @@
         "deadOpacity": 0.6,
         "displayMode": "auto_hide",
         "dockType": "attached",
-        "enabled": true,
+        "enabled": false,
         "floatingRatio": 1,
         "groupApps": true,
         "groupClickAction": "cycle",
@@ -732,6 +735,10 @@
             {
                 "enabled": true,
                 "id": "steam"
+            },
+            {
+                "enabled": true,
+                "id": "ghostty"
             }
         ],
         "enableUserTheming": true

@@ -1,5 +1,5 @@
 -- Set "Windows" key as main modifier --
-local MOD = "SUPER"
+MOD = "SUPER"
 
 -- Functions --
 local function forceKillActive()
@@ -44,30 +44,54 @@ local function toggle_power(display)
     end
 end
 
-local function toggle_shell()
-    local function is_running(process)
-        local handle = io.popen("pgrep -x " .. process)
-        local result = handle:read("*a")
-        handle:close()
-        return result ~= ""
-    end
+local shell_state = 0
 
-    if is_running("qs") or is_running("linux-wallpaperengine") then
-        os.execute("killall -9 qs")
-        os.execute("killall -9 linux-wallpaperengine")
-    else
-        os.execute("linux-wallpaperengine --silent --screen-root DP-1 --bg 2638946149 &")
-        os.execute("linux-wallpaperengine --silent --disable-mouse --disable-parallax --set-property timeofday=3 --screen-root HDMI-A-1 --bg 2504353624 &")
-        os.execute("qs -c noctalia-shell &")
-    end
+local function is_running(process)
+    local handle = io.popen("pgrep -x " .. process)
+    local result = handle:read("*a")
+    handle:close()
+    return result ~= ""
+end
+
+local function start_WE()
+    os.execute("linux-wallpaperengine --silent --screen-root DP-1 --bg 2638946149 &")
+    os.execute("linux-wallpaperengine --silent --disable-mouse --disable-parallax --set-property timeofday=3 --screen-root HDMI-A-1 --bg 2504353624 &")
+end
+
+local function start_QS()
+    os.execute("qs -c noctalia-shell &")
 end
 
 -- App Control --
+hl.bind(MOD .. " + W", function()
+    if shell_state == 0 then
+        os.execute("killall -9 linux-wallpaperengine")
+        shell_state = 1
+    elseif shell_state == 1 then
+        os.execute("killall -9 qs")
+        shell_state = 2
+    else
+        start_WE()
+        start_QS()
+        shell_state = 0
+    end
+end)
+hl.bind(MOD .. " + SHIFT + W", function()
+    if shell_state == 0 then
+        return
+    elseif shell_state == 1 then
+        start_WE()
+        shell_state = 0
+    elseif shell_state == 2 then
+        start_WE()
+        start_QS()
+        shell_state = 0
+    end
+end)
 hl.bind(MOD .. " + S", hl.dsp.exec_cmd(music))
-hl.bind(MOD .. " + D", hl.dsp.exec_cmd(discord))
+hl.bind(MOD .. " + D", function() discord() end)
 hl.bind(MOD .. " + C", hl.dsp.exec_cmd(code))
 hl.bind(MOD .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(MOD .. " + W", function() toggle_shell() end)
 hl.bind(MOD .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(MOD .. " + M", hl.dsp.exec_cmd(mail))
 hl.bind(MOD .. " + O", hl.dsp.exec_cmd(notes))
@@ -78,6 +102,7 @@ hl.bind(MOD .. " + comma", hl.dsp.exec_cmd(noctalia .. " settings toggle"))
 hl.bind(MOD .. " + period", hl.dsp.exec_cmd("emote"))
 hl.bind(MOD .. " + RETURN", hl.dsp.exec_cmd(terminal))
 hl.bind(MOD .. " + SHIFT + RETURN", hl.dsp.exec_cmd(terminal_float))
+hl.bind("CTRL + ALT + I", hl.dsp.exec_cmd(sysinfo))
 
 -- Media Control --
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(noctalia .. " volume increase"), { repeating = true, locked = true })
@@ -116,6 +141,13 @@ hl.bind(MOD .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(MOD .. " + SHIFT + C", hl.dsp.window.center())
 hl.bind(MOD .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(MOD .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind("SUPER + X", function ()
+    hl.dispatch(hl.dsp.workspace.toggle_special("minimize"))
+    hl.dispatch(hl.dsp.window.move({workspace = "+0"}))
+    hl.dispatch(hl.dsp.workspace.toggle_special("minimize"))
+    hl.dispatch(hl.dsp.window.move({workspace = "special:minimize"}))
+    hl.dispatch(hl.dsp.workspace.toggle_special("minimize"))
+end)
 
 -- System Control --
-hl.bind(MOD .. " + ESCAPE", hl.dsp.exec_cmd("nwg-bar"))
+--hl.bind(MOD .. " + ESCAPE", hl.dsp.exec_cmd("nwg-bar"))

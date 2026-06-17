@@ -7,9 +7,9 @@ hl.config({
         enable_swallow = true,
         swallow_regex = "^(kitty)$",
         disable_hyprland_logo = true,
-        disable_splash_rendering = false,
+        disable_splash_rendering = true,
         force_default_wallpaper = 0,
-        middle_click_paste = true,
+        middle_click_paste = false,
         disable_watchdog_warning = false,
         vrr = 0
     },

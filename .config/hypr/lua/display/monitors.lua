@@ -6,10 +6,10 @@ hl.monitor({
     transform = 0,
     bitdepth = 10,
     cm = "srgb",
-    ---sdrbrightness = 1.00,
-    ---sdrsaturation = 1.10,
-    ---sdr_min_luminance = 0.1,
-    ---sdr_max_luminance = 100,
+    --sdrbrightness = 1.30,
+    --sdrsaturation = 1.30,
+    --sdr_min_luminance = 0.1,
+    --sdr_max_luminance = 100,
     vrr = 0
 })
 

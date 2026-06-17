@@ -5,6 +5,7 @@
   "showPeerCount": false,
   "hideDisconnected": true,
   "hideMullvadExitNodes": true,
+  "showSearchBar": false,
   "terminalCommand": "kitty",
   "sshUsername": "ELECTRO",
   "pingCount": 5,

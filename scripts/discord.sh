@@ -2,7 +2,7 @@
 
 for variant in discord-canary discord-ptb discord; do
     if command -v "$variant" &>/dev/null; then
-        exec "$variant"
+        exec "$variant" --enable-features=UseOzonePlatform --ozone-platform=wayland "$@"
     fi
 done
 

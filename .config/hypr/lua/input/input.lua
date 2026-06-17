@@ -7,7 +7,11 @@ hl.config({
         sensitivity = -0.8,
         accel_profile = "adaptive",
         scroll_factor = 1.0,
-        touchpad = { natural_scroll = true, tap_to_click = true }
+        left_handed = false,
+        natural_scroll = false,
+        touchpad = {
+            tap_to_click = true
+        }
     },
 
     cursor = {
