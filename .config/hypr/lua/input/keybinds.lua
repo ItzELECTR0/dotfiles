@@ -95,6 +95,7 @@ hl.bind(MOD .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(MOD .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(MOD .. " + M", hl.dsp.exec_cmd(mail))
 hl.bind(MOD .. " + O", hl.dsp.exec_cmd(notes))
+hl.bind(MOD .. " + ALT + B", hl.dsp.exec_cmd(alternateBrowser))
 hl.bind(MOD .. " + SHIFT + B", hl.dsp.exec_cmd(privateBrowser))
 hl.bind(MOD .. " + Super_L", hl.dsp.exec_cmd(menu))
 hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(noctalia .. " controlCenter toggle"))
@@ -125,8 +126,8 @@ hl.bind("CTRL + F3", function() toggle_brightness(1, {0, 50, 100}) end)
 hl.bind("CTRL + F4", function() toggle_power(1) end)
 
 -- Workspace Control
-hl.bind(MOD .. " + mouse_down", hl.dsp.focus({ workspace = "m-1" }))
-hl.bind(MOD .. " + mouse_up", hl.dsp.focus({ workspace = "m+1" }))
+hl.bind(MOD .. " + mouse_down", hl.dsp.focus({ workspace = "m+1" }))
+hl.bind(MOD .. " + mouse_up", hl.dsp.focus({ workspace = "m-1" }))
 for i = 1, 9 do
     hl.bind(MOD .. " + " .. i, hl.dsp.focus({ workspace = tostring(i) }))
 end

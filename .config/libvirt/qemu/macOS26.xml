@@ -1,0 +1,103 @@
+<domain type="kvm" xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0">
+  <name>macOS26</name>
+  <title>macOS Tahoe</title>
+  <memory unit="MiB">12288</memory>
+  <currentMemory unit="MiB">12288</currentMemory>
+  <vcpu placement="static">8</vcpu>
+  <cpu mode="custom" match="exact" check="none">
+    <model fallback="forbid">Skylake-Client</model>
+    <vendor>GenuineIntel</vendor>
+    <feature policy="require" name="ssse3"/>
+    <feature policy="require" name="sse4.2"/>
+    <feature policy="require" name="popcnt"/>
+    <feature policy="require" name="avx"/>
+    <feature policy="require" name="aes"/>
+    <feature policy="require" name="xsave"/>
+    <feature policy="require" name="xsaveopt"/>
+    <feature policy="require" name="invtsc"/>
+    <feature policy="disable" name="hle"/>
+    <feature policy="disable" name="rtm"/>
+    <topology sockets="1" cores="4" threads="2"/>
+  </cpu>
+  <os>
+    <type arch="x86_64" machine="q35">hvm</type>
+    <bootmenu enable="no"/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <vmport state="off"/>
+  </features>
+  <clock offset="localtime">
+    <timer name="rtc" tickpolicy="catchup"/>
+    <timer name="pit" tickpolicy="delay"/>
+    <timer name="hpet" present="no"/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <pm>
+    <suspend-to-mem enabled="no"/>
+    <suspend-to-disk enabled="no"/>
+  </pm>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <controller type="sata" index="0"/>
+    <disk type="file" device="disk">
+      <driver name="qemu" type="raw"/>
+      <source file="/home/ELECTRO/Vault/LinuxThings/VM/QEMU/Images/macOS26/BaseSystem.img"/>
+      <target dev="sdd" bus="sata"/>
+      <address type="drive" controller="0" bus="0" target="0" unit="3"/>
+    </disk>
+    <disk type="file" device="disk">
+      <driver name="qemu" type="qcow2" cache="writeback"/>
+      <source file="/var/lib/libvirt/images/macOS26.img"/>
+      <target dev="sde" bus="sata"/>
+      <address type="drive" controller="0" bus="0" target="0" unit="4"/>
+    </disk>
+    <controller type="usb" model="qemu-xhci" ports="4" index="0"/>
+    <controller type="usb" model="ehci" index="1"/>
+    <input type="keyboard" bus="usb">
+      <address type="usb" bus="0" port="1"/>
+    </input>
+    <input type="tablet" bus="usb">
+      <address type="usb" bus="0" port="2"/>
+    </input>
+    <video>
+      <model type="vmvga" vram="16384" heads="1"/>
+    </video>
+    <graphics type="vnc" port="-1" autoport="yes" listen="127.0.0.1">
+      <listen type="address" address="127.0.0.1"/>
+    </graphics>
+    <sound model="ich9">
+      <codec type="duplex"/>
+    </sound>
+    <serial type="pty">
+      <target type="isa-serial" port="0"/>
+    </serial>
+    <console type="pty">
+      <target type="serial" port="0"/>
+    </console>
+    <memballoon model="none"/>
+  </devices>
+  <qemu:commandline>
+    <qemu:arg value="-drive"/>
+    <qemu:arg value="if=pflash,format=raw,readonly=on,file=/var/lib/libvirt/images/OSX-KVM/OVMF_CODE_4M.fd"/>
+    <qemu:arg value="-drive"/>
+    <qemu:arg value="if=pflash,format=raw,file=/var/lib/libvirt/images/OSX-KVM/OVMF_VARS-1920x1080.fd"/>
+    <qemu:arg value="-drive"/>
+    <qemu:arg value="id=OpenCoreBoot,if=none,snapshot=on,format=qcow2,file=/var/lib/libvirt/images/OSX-KVM/OpenCore/OpenCore.qcow2"/>
+    <qemu:arg value="-device"/>
+    <qemu:arg value="ide-hd,bus=sata.2,drive=OpenCoreBoot"/>
+    <qemu:arg value="-device"/>
+    <qemu:arg value="isa-applesmc,osk=ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"/>
+    <qemu:arg value="-smbios"/>
+    <qemu:arg value="type=2"/>
+    <qemu:arg value="-cpu"/>
+    <qemu:arg value="Skylake-Client,-hle,-rtm,kvm=on,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,+ssse3,+sse4.2,+popcnt,+avx,+aes,+xsave,+xsaveopt,check"/>
+    <qemu:arg value="-netdev"/>
+    <qemu:arg value="user,id=net0,hostfwd=tcp::2222-:22"/>
+    <qemu:arg value="-device"/>
+    <qemu:arg value="virtio-net-pci,netdev=net0,id=net0,mac=52:54:00:c9:18:27"/>
+  </qemu:commandline>
+</domain>

@@ -23,7 +23,7 @@ hl.window_rule({match = {fullscreen = true}, no_blur = true, no_dim = true})
 
 ---[===Gaming=Rules===]---
 hl.window_rule({match = {class = "steam_app_.*"}, immediate = true, monitor = "DP-1", workspace = 2})
-hl.window_rule({match = {class = "steam_proton"}, immediate = true, monitor = "DP-1", workspace = 2})
+hl.window_rule({match = {class = "steam_proton"}, immediate = true, monitor = "DP-1",  workspace = 2})
 hl.window_rule({match = {class = "gamescope"}, immediate = true, monitor = "DP-1", workspace = 2})
 hl.window_rule({match = {class = "cs2"}, immediate = true, monitor = "DP-1", workspace = 2})
 
@@ -33,7 +33,7 @@ hl.window_rule({match = {class = "[Hh]elium"}, opaque = true})
 ---[===Main=Monitor=Apps===]---
 hl.window_rule({match = {class = "[Ll]ibrewolf"}, opaque = true, no_initial_focus = true, monitor = "DP-1", workspace = 1})
 hl.window_rule({match = {class = "[Ll]ibrewolf", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
-hl.window_rule({match = {class = "Minecraft\\*?.*"}, monitor = "DP-1", no_initial_focus = true, fullscreen = true, workspace = 2})
+hl.window_rule({match = {class = "com.mojang.[Mm]inecraft"}, immediate = true, monitor = "DP-1", no_initial_focus = true, fullscreen = true, workspace = 2})
 hl.window_rule({match = {class = "[Pp]andora[Ll]auncher", title = "Minecraft Game Output"}, monitor = "DP-1", workspace = 2})
 hl.window_rule({match = {class = "Unity"}, monitor = "DP-1", no_initial_focus = true, workspace = 3})
 hl.window_rule({match = {class = "steam", title = "Steam Big Picture Mode"}, monitor = "DP-1", fullscreen = true, workspace = 2})
@@ -43,11 +43,14 @@ hl.window_rule({match = {initial_class = "wondershare filmora.exe", class = "won
 hl.window_rule({match = {class = "[Ss]team|[Hh]eroic|modrinth-app"}, monitor = "HDMI-A-1", workspace = 5, no_initial_focus = true})
 hl.window_rule({match = {class = "[Dd]iscord-[Cc]anary|[Dd]iscord-[Pp][Tt][Bb]|[Dd]iscord"}, monitor = "HDMI-A-1", workspace = 6, no_initial_focus = true})
 hl.window_rule({match = {class = "[Dd]iscord-[Cc]anary|[Dd]iscord-[Pp][Tt][Bb]|[Dd]iscord", fullscreen = true}, opaque = true})
-hl.window_rule({match = {class = "feishin"}, monitor = "HDMI-A-1", workspace = 6, no_initial_focus = true})
+hl.window_rule({match = {class = "[Ff]eishin"}, monitor = "HDMI-A-1", workspace = 6, no_initial_focus = true})
 
 ---[===Floating=Windows===]---
 hl.window_rule({match = {class = "librewolf", float = true}, size = "1640 980"})
+hl.window_rule({match = {class = "librewolf", title = "Extension:.*"}, float = true})
+hl.window_rule({match = {class = "twintaillauncher"}, float = true, size = "1460 800"})
 hl.window_rule({match = {class = "localsend"}, float = true, size = "1000 660"})
+hl.window_rule({match = {class = "motrix-next"}, float = true, size = "960 830"})
 hl.window_rule({match = {class = "[Ww]aydroid|^waydroid\\.com\\..*$"}, size = "1920 1080", float = true, center = true})
 hl.window_rule({match = {class = "com.vysp3r.ProtonPlus|net.davidotek.pupgui2"}, float = true})
 hl.window_rule({match = {class = "io.ente.auth", title = "Ente Auth"}, size = "770 1100", float = true, center = true})

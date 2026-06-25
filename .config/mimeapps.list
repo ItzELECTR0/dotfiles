@@ -383,3 +383,4 @@ application/x-zerosize=vscodium-insiders.desktop;
 application/x-bat=vscodium-insiders.desktop;
 text/x-ms-regedit=vscodium-insiders.desktop;
 application/x-msdownload=wine.desktop;
+application/x-shellscript=vscodium-insiders.desktop;

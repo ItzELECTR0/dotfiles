@@ -213,7 +213,7 @@ Set-Alias c Clear-Host
 # EDITOR SHORTCUTS
 Set-Alias code codium-insiders
 Set-Alias cc codex
-# Set-Alias gemini agy
+Set-Alias gemini agy
 Set-Alias lgit lazygit
 Set-Alias top btop
 Set-Alias resesh Restart-Session
@@ -258,6 +258,7 @@ Set-Alias mediactl Start-MediaManagement
 Set-Alias ytvid Start-YTDLP-Video
 Set-Alias ytaud Start-YTDLP-Audio
 Set-Alias ytsub Start-YTDLP-Subtitles
+Set-Alias ytlist Start-YTDLP-Playlist
 Set-Alias compress Start-Compressing
 Set-Alias resolve Convert-ForResolve
 
@@ -383,7 +384,7 @@ function Start-Compressing {
         [string]$InputFile,
 
         [Parameter(Position = 1)]
-        [int]$TargetSizeMiB = 10,
+        [int]$TargetSizeMiB = 8.5,
 
         [Parameter(Position = 2)]
         [int]$AudioBitrate = 320
@@ -415,17 +416,10 @@ function Start-Compressing {
         $output
     )
 
-    if ($hasNvenc) {
-        ffmpeg -hwaccel auto -i $InputFile `
-            -c:v h265_nvenc -b:v $videoBitrate `
-            -maxrate $videoBitrate -bufsize $bufsize `
-            @commonArgs
-    } else {
-        ffmpeg -i $InputFile `
-            -c:v libx265 -b:v $videoBitrate `
-            -maxrate $videoBitrate -bufsize $bufsize `
-            @commonArgs
-    }
+    ffmpeg -hwaccel auto -i $InputFile `
+        -c:v hevc_nvenc -b:v $videoBitrate `
+        -maxrate $videoBitrate -bufsize $bufsize `
+        @commonArgs
 }
 
 function hostname {
@@ -731,6 +725,30 @@ function Start-YTDLP-Subtitles {
     yt-dlp --skip-download --write-sub --write-auto-sub --extractor-args "youtube:skip=auto_translated_subs" --no-playlist --sub-langs all --convert-subs ass $url
 }
 
+function Start-YTDLP-Playlist {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$url,
+        [string]$Name
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Name)) {
+        $outputTemplate = "%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s"
+    }
+    else {
+        $outputTemplate = "$Name/%(playlist_index)s - %(title)s.%(ext)s"
+    }
+
+    yt-dlp `
+        -f "bestvideo+bestaudio" `
+        --merge-output-format mkv `
+        --recode-video mkv `
+        --yes-playlist `
+        -o $outputTemplate `
+        --postprocessor-args "ffmpeg:-c:v hevc_nvenc -preset p7 -cq 20 -c:a flac" `
+        $url
+}
+
 function Install-ADB {
     param (
         [string]$apk
@@ -1002,18 +1020,16 @@ function Update-AURgitPackage {
         [string]$PackageName,
 
         [switch]$CleanBuild,
-
+        [switch]$ClearSource,
         [switch]$NoConfirm
     )
 
     begin {
         function Test-CommandExists {
             param([string]$Name)
-
             return $null -ne (Get-Command $Name -ErrorAction SilentlyContinue)
         }
 
-        # Prefer paru over yay
         $AurHelper = $null
 
         if (Test-CommandExists "paru") {
@@ -1026,12 +1042,10 @@ function Update-AURgitPackage {
             throw "Neither paru nor yay is installed or available in PATH."
         }
 
-        if (-not (Test-CommandExists "git")) {
-            throw "git is not installed or not in PATH."
-        }
-
-        if (-not (Test-CommandExists "makepkg")) {
-            throw "makepkg is not installed or not in PATH."
+        foreach ($cmd in @("git", "makepkg")) {
+            if (-not (Test-CommandExists $cmd)) {
+                throw "$cmd is not installed or not in PATH."
+            }
         }
 
         Write-Host "Using AUR helper: $AurHelper" -ForegroundColor DarkGray
@@ -1042,19 +1056,11 @@ function Update-AURgitPackage {
 
         $cacheDir = Join-Path $HOME ".cache/$AurHelper/clone/$PackageName"
 
-        # If cache doesn't exist, do a fresh install/build
         if (-not (Test-Path $cacheDir)) {
             Write-Host "Package cache does not exist. Cloning/building fresh..." -ForegroundColor Yellow
 
-            $aurArgs = @(
-                "-S"
-                "--needed"
-                $PackageName
-            )
-
-            if ($NoConfirm) {
-                $aurArgs += "--noconfirm"
-            }
+            $aurArgs = @("-S"; "--needed"; $PackageName)
+            if ($NoConfirm) { $aurArgs += "--noconfirm" }
 
             & $AurHelper @aurArgs
 
@@ -1068,49 +1074,105 @@ function Update-AURgitPackage {
         Push-Location $cacheDir
 
         try {
+            # PKGBUILD repo update
             Write-Host "Pulling latest PKGBUILD changes..." -ForegroundColor Yellow
 
             & git fetch --all --prune
             & git reset --hard HEAD
-            & git clean -fdx
+            & git clean -fdx --exclude=src
+
             & git pull --rebase
 
             if ($LASTEXITCODE -ne 0) {
-                throw "git pull failed for $PackageName"
+                Write-Host "Warning: git pull failed (network issue?). Rebuilding with existing PKGBUILD." -ForegroundColor Yellow
             }
 
+            # Source update (best-effort)
+            Write-Host "Fetching upstream sources..." -ForegroundColor Yellow
+
+            $fetchArgs = @("-o"; "--noprepare")
+            if ($NoConfirm) { $fetchArgs += "--noconfirm" }
+
+            & makepkg @fetchArgs
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Warning: source fetch failed (network issue?). Rebuilding with existing sources." -ForegroundColor Yellow
+            }
+
+            # Optional cleanup
             if ($CleanBuild) {
                 Write-Host "Cleaning old build artifacts..." -ForegroundColor Yellow
 
-                @("src", "pkg") |
-                    ForEach-Object {
-                        if (Test-Path $_) {
-                            Remove-Item $_ -Recurse -Force -ErrorAction SilentlyContinue
-                        }
-                    }
+                if (Test-Path "pkg") {
+                    Remove-Item "pkg" -Recurse -Force -ErrorAction SilentlyContinue
+                }
 
                 Get-ChildItem -Force |
-                    Where-Object {
-                        $_.Name -match '\.pkg\.tar'
-                    } |
+                    Where-Object { $_.Name -match '\.pkg\.tar' } |
                     Remove-Item -Force -ErrorAction SilentlyContinue
             }
 
-            Write-Host "Rebuilding package..." -ForegroundColor Green
+            if ($ClearSource) {
+                Write-Host "Clearing source directory..." -ForegroundColor Yellow
 
-            $makepkgArgs = @(
-                "-si"
-                "--force"
-            )
-
-            if ($NoConfirm) {
-                $makepkgArgs += "--noconfirm"
+                if (Test-Path "src") {
+                    Remove-Item "src" -Recurse -Force -ErrorAction SilentlyContinue
+                }
             }
+
+            # Build (no install)
+            Write-Host "Building package..." -ForegroundColor Green
+
+            # Drop -e if source was cleared
+            $makepkgArgs = if ($ClearSource) {
+                @("-s"; "--force")
+            } else {
+                @("-se"; "--force")
+            }
+            if ($NoConfirm) { $makepkgArgs += "--noconfirm" }
 
             & makepkg @makepkgArgs
 
             if ($LASTEXITCODE -ne 0) {
-                throw "makepkg failed for $PackageName"
+                throw "makepkg build failed for $PackageName"
+            }
+
+            $builtPackages = Get-ChildItem -Force |
+                Where-Object { $_.Name -match '\.pkg\.tar' } |
+                Select-Object -ExpandProperty FullName
+
+            if (-not $builtPackages) {
+                throw "Build appeared to succeed but no .pkg.tar file was found in $cacheDir"
+            }
+
+            # Install
+            Write-Host "Installing built package(s)..." -ForegroundColor Green
+
+            $pacmanArgs = @("-U")
+            if ($NoConfirm) { $pacmanArgs += "--noconfirm" }
+            $pacmanArgs += $builtPackages
+
+            & doas pacman @pacmanArgs
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host ""
+                Write-Host "Installation failed for $PackageName." -ForegroundColor Red
+                Write-Host "The built package(s) are still available at:" -ForegroundColor Yellow
+
+                $builtPackages | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
+
+                Write-Host ""
+                Write-Host "To retry installation manually:" -ForegroundColor DarkGray
+                Write-Host "  doas pacman -U $($builtPackages -join ' ')" -ForegroundColor DarkGray
+
+                throw "pacman failed to install $PackageName (exit $LASTEXITCODE)"
+            }
+
+            # Post-install cleanup (only on success)
+            Write-Host "Cleaning up built package artifacts..." -ForegroundColor DarkGray
+
+            $builtPackages | ForEach-Object {
+                Remove-Item $_ -Force -ErrorAction SilentlyContinue
             }
 
             Write-Host "Successfully updated $PackageName" -ForegroundColor Green
@@ -1211,7 +1273,7 @@ function Start-TWAOS {
     $doOpen   = $open -or $o -or $og -or $go
     $doGemini = $gemini -or $g -or $og -or $go
 
-    Set-Location "$HOME/Development/Projects/Unity/TWAOS"
+    Set-Location "$HOME/Development/Projects/Unity/SIP/TWAOS"
     Start-CustomClear
     Write-LogOutput "Welcome to the wonderful repository of Sip!"
     Write-Host "Here's what's changed:`n"; git status; Write-Host ""

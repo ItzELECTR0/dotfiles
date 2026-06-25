@@ -15,7 +15,7 @@ Pattern=\ [Explicit]
 Regexp=FALSE
 
 [ThunarSbrInsertRenamer]
-Offset=5
+Offset=6
 Text=0
 Mode=THUNAR_SBR_INSERT_MODE_INSERT
 OffsetMode=THUNAR_SBR_OFFSET_MODE_LEFT
