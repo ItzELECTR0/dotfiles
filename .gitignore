@@ -1,1 +1,7 @@
 urls.json
+.config/**/Cookies*
+.config/**/*.pem
+.config/**/*.db
+.config/**/History.xml
+.config/**/instance.json
+.config/**/telemetry.json
