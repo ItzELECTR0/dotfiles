@@ -1,0 +1,7 @@
+{
+  "serverUrl": "https://localhost:8920",
+  "windowMaximized": true,
+  "hwdec": "vulkan",
+  "audioChannels": "7.1",
+  "windowDecorations": "serverThemed"
+}

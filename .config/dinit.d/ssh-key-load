@@ -1,0 +1,12 @@
+# Dinit user service SSH key auto-loader
+# Managed by turnstile on Artix Linux.
+#
+# If your ssh-agent is a named dinit service (e.g. 'ssh-agent'), replace
+# the 'after' line below with:
+#     depends-on = ssh-agent
+# to guarantee ordering. 'after' alone is a soft order hint.
+
+type = scripted
+command = /home/ELECTRO/.local/bin/ssh-key-load
+logfile = /tmp/ssh-key-load.log
+depends-on = ssh-agent

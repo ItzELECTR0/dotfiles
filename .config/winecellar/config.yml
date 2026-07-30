@@ -1,0 +1,39 @@
+# WineCellar configuration
+# ~/.config/winecellar/config.yml
+#
+# Rules are matched against the absolute path of the executable wine is asked
+# to run (or the working directory if no file argument is found). All matching
+# rules apply, in file order, layered on top of `global`.
+
+# The real wine binary the shim hands off to.
+# Default: /usr/bin/<shim name>, i.e. /usr/bin/wine.
+#wine: /usr/bin/wine
+
+# Wrapper binaries (default: resolved from PATH).
+#gamemode_bin: gamemoderun
+#gamescope_bin: gamescope
+
+global:
+  env:
+    WINE_USE_NTSYNC: 1
+    WINE_USE_WOW64: 1
+    WINE_ENABLE_HDR: 1
+    ENABLE_HDR_WSI: 1
+  gamescope:
+    args: -f -w 2560 -h 1440 -r 170 -o 15 --backend=wayland --hdr-enabled
+
+rules:
+  - name: veracrypt
+    match:
+      - /mnt/veracrypt1/**
+    prefix: /mnt/veracrypt1/.prefix
+    gamemode: true
+    gamescope: true
+    #args: []
+
+  - name: Gaming
+    match:
+     - ~/Gaming/**
+    prefix: ~/Gaming/.prefixes/Wine
+    gamemode: true
+    gamescope: true

@@ -1,0 +1,21 @@
+proton_version = "Proton-CachyOS Latest"
+prefix_path = "~/.proton"
+use_umu = true
+mangohud = false
+gamescope = false
+gamemode = true
+
+[env]
+  ENABLE_HDR_WSI = "1"
+  PROTONPREFIX = "~/.proton"
+  PROTON_DISCORD_BRIDGE = "0"
+  PROTON_DLSS_UPGRADE = "1"
+  PROTON_ENABLE_HDR = "1"
+  PROTON_ENABLE_WAYLAND = "1"
+  PROTON_USE_NTSYNC = "1"
+  PROTON_USE_WOW64 = "1"
+
+[gamescope_opts]
+  width = 2560
+  height = 1440
+  fullscreen = true

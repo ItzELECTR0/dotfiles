@@ -1,0 +1,12 @@
+{
+	"useNeDB": false,
+	"version": "1.2.2",
+	"sourceGroups": [
+		{
+			"isMultiple": false,
+			"sids": [
+				0
+			]
+		}
+	]
+}

@@ -1,0 +1,18 @@
+{
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "git.openRepositoryInParentFolders": "never",
+    "editor.fontFamily": "'FiraCode Nerd Font', 'monospace', monospace",
+    "svelte.enable-ts-plugin": true,
+    "update.showReleaseNotes": false,
+    "extensions.experimental.affinity": {
+        "asvetliakov.vscode-neovim": 1
+    },
+    "editor.minimap.enabled": false,
+    "chatgpt.composerEnterBehavior": "cmdIfMultiline",
+    "workbench.colorTheme": "Dark Modern",
+    "js/ts.updateImportsOnFileMove.enabled": "always",
+    "csharp.suppressDotnetInstallWarning": true,
+    "dotnet.codeLens.enableReferencesCodeLens": false,
+    "workbench.editor.empty.hint": "hidden"
+}

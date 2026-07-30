@@ -1,0 +1,65 @@
+[
+  {
+    "title" : "GE-Proton10-34",
+    "displayed_title" : "GE-Proton10-34",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "Proton-CachyOS Latest",
+    "displayed_title" : "Proton-CachyOS Latest",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "DW-Proton Latest",
+    "displayed_title" : "DW-Proton Latest",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "Proton-GE Latest",
+    "displayed_title" : "Proton-GE Latest",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "GE-Proton10-32",
+    "displayed_title" : "GE-Proton10-32",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "Proton-GE RTSP Latest",
+    "displayed_title" : "Proton-GE RTSP Latest",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "Proton-EM Latest",
+    "displayed_title" : "Proton-EM Latest",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  }
+]

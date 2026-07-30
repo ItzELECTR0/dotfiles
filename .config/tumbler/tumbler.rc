@@ -1,0 +1,4 @@
+[ffmpeg-thumbnailer]
+Disabled=false
+Priority=1
+MaxFileSize=2147483648
