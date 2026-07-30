@@ -1,0 +1,133 @@
+// Canary layout (ortho), as variants of us and ro.
+//
+//   w l y p b   z f o u '
+//   c r s t g   m n e i a
+//   q j v d k   x h / , .
+//
+// AC11 (right of A on a row-stagger board) holds semicolon/colon, since
+// apostrophe moved up to AD10 and ortho Canary has no home for it.
+//
+// Selected as layout "canary" with variant "us" or "ro" — see the note at
+// the bottom of this file for why it is not us(canary) / ro(canary).
+
+default partial alphanumeric_keys
+xkb_symbols "us" {
+
+    include "us(basic)"
+
+    name[Group1] = "English (Canary)";
+
+    key <AD01> {[ w, W ]};
+    key <AD02> {[ l, L ]};
+    key <AD03> {[ y, Y ]};
+    key <AD04> {[ p, P ]};
+    key <AD05> {[ b, B ]};
+    key <AD06> {[ z, Z ]};
+    key <AD07> {[ f, F ]};
+    key <AD08> {[ o, O ]};
+    key <AD09> {[ u, U ]};
+    key <AD10> {[ apostrophe, quotedbl ]};
+    key <AC01> {[ c, C ]};
+    key <AC02> {[ r, R ]};
+    key <AC03> {[ s, S ]};
+    key <AC04> {[ t, T ]};
+    key <AC05> {[ g, G ]};
+    key <AC06> {[ m, M ]};
+    key <AC07> {[ n, N ]};
+    key <AC08> {[ e, E ]};
+    key <AC09> {[ i, I ]};
+    key <AC10> {[ a, A ]};
+    key <AC11> {[ semicolon, colon ]};
+    key <AB01> {[ q, Q ]};
+    key <AB02> {[ j, J ]};
+    key <AB03> {[ v, V ]};
+    key <AB04> {[ d, D ]};
+    key <AB05> {[ k, K ]};
+    key <AB06> {[ x, X ]};
+    key <AB07> {[ h, H ]};
+    key <AB08> {[ slash, question ]};
+    key <AB09> {[ comma, less ]};
+    key <AB10> {[ period, greater ]};
+};
+
+partial alphanumeric_keys
+xkb_symbols "ro" {
+
+    // Built on ro(std) — the SR 13392:2004 primary layout you already use.
+    //
+    // ă (AD11), î (AD12) and â (BKSL) sit outside the 30-key block, so they
+    // survive the Canary permutation untouched.  ș and ț do not: std puts
+    // them on AC10/AC11, which Canary needs for a and semicolon.  Both move
+    // to AltGr on their base letter, the way ro(basic) handles diacritics:
+    //
+    //     AltGr+s = ș      AltGr+t = ț
+    //     AltGr+a = ă      AltGr+i = î      AltGr+q = â
+    //
+    // The last three are added for consistency; their dedicated std keys
+    // still work as well.
+
+    include "ro(std)"
+
+    name[Group1] = "Romanian (Canary)";
+
+    // All four levels are spelled out, NoSymbol included: a shorter list
+    // only overrides the levels it names, so ro(std)'s AltGr symbols would
+    // otherwise leak through onto whatever letter Canary moved here.
+
+    key <AD01> {[ w, W, ssharp, U1E9E ]};
+    key <AD02> {[ l, L, lstroke, Lstroke ]};
+    key <AD03> {[ y, Y, NoSymbol, NoSymbol ]};
+    key <AD04> {[ p, P, section, NoSymbol ]};
+    key <AD05> {[ b, B, NoSymbol, NoSymbol ]};
+    key <AD06> {[ z, Z, NoSymbol, NoSymbol ]};
+    key <AD07> {[ f, F, NoSymbol, NoSymbol ]};
+    key <AD08> {[ o, O, NoSymbol, NoSymbol ]};
+    key <AD09> {[ u, U, NoSymbol, NoSymbol ]};
+    key <AD10> {[ apostrophe, quotedbl, NoSymbol, NoSymbol ]};
+    key <AC01> {[ c, C, copyright, NoSymbol ]};
+    key <AC02> {[ r, R, NoSymbol, NoSymbol ]};
+    key <AC03> {[ s, S, U0219, U0218 ]};       // ș Ș
+    key <AC04> {[ t, T, U021B, U021A ]};       // ț Ț
+    key <AC05> {[ g, G, NoSymbol, NoSymbol ]};
+    key <AC06> {[ m, M, NoSymbol, NoSymbol ]};
+    key <AC07> {[ n, N, NoSymbol, NoSymbol ]};
+    key <AC08> {[ e, E, EuroSign, NoSymbol ]};
+    key <AC09> {[ i, I, icircumflex, Icircumflex ]};
+    key <AC10> {[ a, A, abreve, Abreve ]};
+    key <AC11> {[ semicolon, colon, NoSymbol, NoSymbol ]};
+    key <AB01> {[ q, Q, acircumflex, Acircumflex ]};
+    key <AB02> {[ j, J, NoSymbol, NoSymbol ]};
+    key <AB03> {[ v, V, NoSymbol, NoSymbol ]};
+    key <AB04> {[ d, D, dstroke, Dstroke ]};
+    key <AB05> {[ k, K, NoSymbol, NoSymbol ]};
+    key <AB06> {[ x, X, NoSymbol, NoSymbol ]};
+    key <AB07> {[ h, H, NoSymbol, NoSymbol ]};
+    key <AB08> {[ slash, question, NoSymbol, NoSymbol ]};
+    key <AB09> {[ comma, less, guillemetleft, NoSymbol ]};
+    key <AB10> {[ period, greater, guillemetright, NoSymbol ]};
+};
+
+// ---------------------------------------------------------------------------
+// Why layout=canary,variant=us|ro and not layout=us|ro,variant=canary
+//
+// Adding a variant to an existing system layout from ~/.config/xkb is not
+// possible.  A user rules file can extend the system rules with
+//
+//     ! include %S/evdev
+//
+// but the system's own catch-all rule for every group still fires:
+//
+//     ! model	layout[2]	=	symbols
+//       *	*		=	+%l[2]%(v[2]):2
+//
+// so layout "ro" with variant "canary" always emits +ro(canary):2 alongside
+// whatever a custom rule emits, and ro(canary) does not exist -> the keymap
+// fails to compile.  Group 1 escapes this because its rule value has no
+// leading "+" (it sets the base rather than appending, and the first match
+// wins), which is why only the second and later groups break.
+//
+// The only ways out would be shadowing symbols/us and symbols/ro entirely
+// (which breaks every layout that includes them) or vendoring a patched copy
+// of the whole system rules file.  Naming the layout "canary" instead sidesteps
+// it: the stock catch-all expands canary + us to canary(us) on its own, so no
+// custom rules file is needed at all and nothing upstream is shadowed.

@@ -1,5 +1,34 @@
--- Set Noctalia shell call --
-noctalia = "qs -c noctalia-shell ipc call"
+noctaliaVersion = "v5"
+
+if noctaliaVersion == "v4" then
+    noctalia          = "qs -c noctalia-shell ipc call"
+    noctaliaStart     = "qs -c noctalia-shell"
+    noctaliaProc      = "qs"
+    nocLauncher       = noctalia .. " launcher toggle"
+    nocControlCenter  = noctalia .. " controlCenter toggle"
+    nocSettings       = noctalia .. " settings toggle"
+    nocVolumeUp       = noctalia .. " volume increase"
+    nocVolumeDown     = noctalia .. " volume decrease"
+    nocVolumeMute     = noctalia .. " volume muteOutput"
+    nocBrightnessUp   = noctalia .. " brightness increase"
+    nocBrightnessDown = noctalia .. " brightness decrease"
+    nocLock           = noctalia .. " lockScreen lock"
+    nocWindowSwitcher = nil -- v4 has no window switcher
+else
+    noctalia          = "noctalia msg"
+    noctaliaStart     = "noctalia"
+    noctaliaProc      = "noctalia"
+    nocLauncher       = noctalia .. " panel-toggle launcher"
+    nocControlCenter  = noctalia .. " panel-toggle control-center"
+    nocSettings       = noctalia .. " settings-toggle"
+    nocVolumeUp       = noctalia .. " volume-up 5"
+    nocVolumeDown     = noctalia .. " volume-down 5"
+    nocVolumeMute     = noctalia .. " volume-mute"
+    nocBrightnessUp   = noctalia .. " brightness-up 5"
+    nocBrightnessDown = noctalia .. " brightness-down 5"
+    nocLock           = noctalia .. " session lock"
+    nocWindowSwitcher = noctalia .. " window-switcher"
+end
 
 function discord()
     local variants = {
@@ -40,20 +69,21 @@ function discord()
     end
 end
 
--- Set programs
+-- Set programs --
 music = "feishin"
 terminal = "kitty"
 terminal_float = "kitty --class kitty-floating"
-browser = "librewolf"
+browser = "zen-browser-twilight"
 alternateBrowser = "helium-browser"
-privateBrowser = "librewolf --private-window"
+privateBrowser = browser.." --private-window"
 code = "vscodium-insiders"
 fileManager = "thunar"
 mail = "thunderbird"
 notes = "obsidian"
+sysmon = "cosmic-monitor"
 sysinfo = "hyprsysteminfo"
 
 -- Set commands --
-menu = noctalia .. " launcher toggle"
+menu = nocLauncher
 hyprcap = dirs.scripts .. "/hyprcap.sh"
 screenshot = "hyprcap shot monitor:active --copy"

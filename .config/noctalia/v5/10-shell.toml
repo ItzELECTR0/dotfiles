@@ -1,0 +1,185 @@
+# ─── Shell / global UI ────────────────────────────────────────────────────
+# Migrated from v4 settings.json: "general", "ui", "appLauncher"
+
+[shell]
+# v4 ui.fontDefault
+font_family = "Segoe UI Variable Static Display"
+# v4 general.avatarImage
+avatar_path = "~/.face.icon"
+# v4 general.telemetryEnabled
+telemetry_enabled = false
+# v4 general.passwordChars = true
+password_style = "default"
+# v4 general.radiusRatio / iRadiusRatio / boxRadiusRatio / screenRadiusRatio = 1
+corner_radius_scale = 1.0
+# v4 ui.boxBorderEnabled = false
+card_borders = false
+# v4 location.hideWeatherCityName = true
+show_location = false
+# v4 appLauncher.customLaunchPrefixEnabled = false
+launch_apps_custom_command = ""
+launch_apps_as_systemd_services = false
+
+# Clipboard — v4 appLauncher.enableClipboardHistory = false
+clipboard_enabled = false
+# v4 appLauncher.autoPasteClipboard = false
+# NOTE: ~/.local/state/noctalia/settings.toml currently sets this to "ctrl_v"
+#       and the state file wins. Delete that line there to let this apply.
+clipboard_auto_paste = "off"
+
+# v4 general.animationDisabled / animationSpeed
+[shell.animation]
+enabled = true
+speed = 1.0
+
+# v4 general.enableShadows = true, general.shadowDirection = "bottom_right"
+# (v5 has no diagonal directions; "down" is the closest single-axis match.
+#  v4 shadowOffsetX/Y are not exposed in v5.)
+[shell.shadow]
+direction = "down"
+alpha = 0.55
+
+[shell.panel]
+# v4 ui.panelsAttachedToBar = false -> everything floats
+launcher_placement = "floating"
+clipboard_placement = "floating"
+control_center_placement = "floating"
+wallpaper_placement = "floating"
+session_placement = "floating"
+polkit_placement = "floating"
+# v4 appLauncher.position = "center"
+launcher_position = "center"
+clipboard_position = "center"
+polkit_position = "center"
+# v4 controlCenter.position = "top_center"
+control_center_position = "top_center"
+# v4 sessionMenu.position = "top_center"
+session_position = "top_center"
+# v4 wallpaper.panelPosition = "follow_bar"
+wallpaper_position = "auto"
+# v4 appLauncher.overviewLayer = true -> floating panels on the overlay layer.
+# Not a setting in this build (shell.panel.floating_layer landed later);
+# overlay is the built-in default anyway.
+# v4 ui.panelBackgroundOpacity = 0.4 — v5 replaced the numeric opacity with
+# three presets; "glass" is the most transparent.
+transparency_mode = "glass"
+borders = true
+shadow = true
+# v4 bar.rightClickFollowMouse = true
+open_near_click_control_center = true
+open_near_click_launcher = false
+open_near_click_clipboard = false
+open_near_click_wallpaper = false
+open_near_click_session = false
+
+[shell.launcher]
+# v4 appLauncher.showCategories
+categories = true
+# v4 appLauncher.iconMode = "native"
+show_icons = true
+# v4 appLauncher.density = "default"
+compact = false
+# v4 appLauncher.viewMode = "list"
+app_grid = false
+# v4 appLauncher.sortByMostUsed
+sort_by_usage = true
+provider_prefix = "/"
+auto_paste = "auto"
+
+# v4 appLauncher.enableSessionSearch = true
+[shell.launcher.providers.session]
+global = true
+
+# v4 appLauncher.enableWindowsSearch = true
+[shell.launcher.providers.windows]
+global = true
+
+# v4 audio.mprisBlacklist
+[shell.mpris]
+blacklist = []
+
+# v4 general.showScreenCorners = false / forceBlackScreenCorners = false
+[shell.screen_corners]
+enabled = false
+size = 32
+
+[hot_corners]
+enabled = false
+
+# v4 appLauncher.screenshotAnnotationTool = "" (unset)
+[shell.screenshot]
+save_to_file = true
+copy_to_clipboard = true
+freeze_screen = true
+confirm_region = false
+show_cursor = false
+pipe_to_command = false
+pipe_command = ""
+
+# ─── Session menu ─────────────────────────────────────────────────────────
+# v4 sessionMenu
+[shell.session]
+# v4 largeButtonsStyle = false, largeButtonsLayout = "single-row"
+grid = false
+grid_columns = 3
+# v4 showKeybinds
+show_shortcuts = true
+
+# v4 powerOptions, in the same order, with the same keybinds.
+# v4 enableCountdown = false -> countdown_seconds = 0 everywhere.
+[[shell.session.actions]]
+action = "shutdown"
+enabled = true
+shortcut = "1"
+countdown_seconds = 0
+variant = "destructive"
+
+[[shell.session.actions]]
+action = "reboot"
+enabled = true
+shortcut = "2"
+countdown_seconds = 0
+
+# v4 "rebootToUefi" — v5 has no built-in action for this, so it becomes a
+# custom command entry.
+[[shell.session.actions]]
+action = "command"
+label = "Reboot to UEFI"
+glyph = "settings"
+command = "systemctl reboot --firmware-setup"
+enabled = true
+shortcut = "3"
+countdown_seconds = 0
+
+[[shell.session.actions]]
+action = "lock"
+enabled = true
+shortcut = "4"
+countdown_seconds = 0
+
+[[shell.session.actions]]
+action = "logout"
+enabled = true
+shortcut = "5"
+countdown_seconds = 0
+
+# v4 had suspend / hibernate / userspaceReboot present but disabled; v5 hides
+# anything not listed, so they are simply omitted.
+
+# ─── Accessibility ────────────────────────────────────────────────────────
+[accessibility]
+high_contrast = false
+# v4 ui.fontDefaultScale = 1.16. v5 has no font-only scale — ui_scale scales
+# the whole non-bar UI (panels, launcher, control center), not just text.
+# Drop to 1.0 if panels end up too large.
+ui_scale = 1.16
+
+# ─── Shell keybinds ───────────────────────────────────────────────────────
+# v4 general.keybinds. v4's "keyRemove" (Del) has no v5 action.
+[keybinds]
+validate = [ "Return", "KP_Enter" ]
+cancel = [ "Escape" ]
+left = [ "Left" ]
+right = [ "Right" ]
+up = [ "Up" ]
+down = [ "Down" ]

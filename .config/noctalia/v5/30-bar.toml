@@ -1,0 +1,96 @@
+# ─── Bar ──────────────────────────────────────────────────────────────────
+# Migrated from v4 settings.json: "bar"
+
+[bar]
+order = [ "default" ]
+
+[bar.default]
+enabled = true
+# v4 bar.position
+position = "top"
+# v4 bar.displayMode = "always_visible"
+auto_hide = false
+smart_auto_hide = false
+show_on_workspace_switch = true
+# v4 bar.enableExclusionZoneInset
+reserve_space = true
+layer = "top"
+
+# v4 bar.density = "mini" + fontScale. These two are also currently set in
+# ~/.local/state/noctalia/settings.toml (scale 0.9, thickness 25) from GUI
+# tuning; the state file wins, so keep them in sync or clear them there.
+thickness = 25
+scale = 0.9
+
+# v4 bar.backgroundOpacity = 0 (fully transparent bar; the capsules carry the
+# visible background)
+background_opacity = 0.0
+# v4 bar.showOutline = false
+border = "outline"
+border_width = 0.0
+
+# v4 bar.frameRadius
+radius = 12
+radius_top_left = 12
+radius_top_right = 12
+radius_bottom_left = 12
+radius_bottom_right = 12
+# v4 bar.outerCorners = true. NOTE: v5 only carves concave corners when the
+# bar touches the screen edge (margin_edge = 0). With margin_edge = 4 below
+# this stays inert — set margin_edge = 0 if you want the v4 look back.
+concave_edge_corners = true
+
+# v4 bar.marginHorizontal / marginVertical
+margin_ends = 6
+margin_edge = 4
+margin_opposite_edge = 0
+# v4 bar.contentPadding
+padding = 2
+# v4 bar.widgetSpacing
+widget_spacing = 6
+
+# v4 bar.showCapsule / capsuleOpacity / capsuleColorKey ("none" -> default fill)
+capsule = true
+capsule_fill = "surface_variant"
+capsule_opacity = 0.8
+capsule_padding = 6
+hover_highlight = true
+
+font_weight = 500
+shadow = true
+contact_shadow = false
+panel_overlap = 1
+
+# v4 bar.widgets.left / center / right
+start = [ "clock", "active_window" ]
+center = [ "workspaces" ]
+end = [
+    "privacy",
+    "network",
+    "bluetooth",
+    "tray",
+    "brightness",
+    "battery",
+    "volume",
+    "keyboard_layout",
+    "notifications",
+    "control-center",
+    "session"
+]
+
+# ─── Bar background (dead zone) gestures ──────────────────────────────────
+# v4 bar.middleClickAction = "settings", rightClickAction = "controlCenter",
+#    mouseWheelAction = "workspace", reverseScroll = false
+# The scroll bindings are already in ~/.local/state/noctalia/settings.toml;
+# they are repeated here so the behaviour is declarative.
+[bar.default.dead_zone.actions]
+middle = "settings-toggle"
+right = "panel-toggle control-center"
+scroll_up = "exec hyprctl dispatch \"hl.dsp.focus({ workspace = 'm-1' })\""
+scroll_down = "exec hyprctl dispatch \"hl.dsp.focus({ workspace = 'm+1' })\""
+
+# ─── Per-monitor overrides ────────────────────────────────────────────────
+# v4 bar.screenOverrides: HDMI-A-1 disabled
+[bar.default.monitor.hdmi]
+match = "HDMI-A-1"
+enabled = false

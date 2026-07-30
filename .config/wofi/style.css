@@ -1,6 +1,6 @@
 window {
     background-color: #141414;
-    border: 1px solid #393d40;
+    border: 1px solid #393d3f;
     border-radius: 12px;
     font-family: "Sans", monospace;
     font-size: 14px;
@@ -9,7 +9,7 @@ window {
 #input {
     background-color: #1f1f1f;
     color: #e8e8e8;
-    border: 1px solid #393d40;
+    border: 1px solid #393d3f;
     border-radius: 8px;
     padding: 8px 12px;
     margin: 10px;

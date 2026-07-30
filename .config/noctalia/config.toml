@@ -1,0 +1,19 @@
+# ─── Noctalia v5 entry point ──────────────────────────────────────────────
+#
+# This folder still holds the v4 (Quickshell) config so both versions can be
+# used side by side:
+#
+#   v4  ->  settings.json, plugins.json, notification-rules.json,
+#           user-templates.toml, colorschemes/, plugins/   (launched with
+#           `qs -c noctalia-shell`)
+#   v5  ->  this file + v5/*.toml + palettes/              (launched with
+#           `noctalia`)
+#
+# v5 normally auto-loads *every* *.toml sitting directly in this folder, which
+# would also pull in the v4 `user-templates.toml` and log "unknown section"
+# warnings. `autoload = false` disables that: only this file and what it
+# includes are loaded.
+
+[include]
+autoload = false
+files = ["v5/"]

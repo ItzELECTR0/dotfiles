@@ -32,11 +32,11 @@
             "obsidian",
             "com.obsproject.Studio",
             "VeraCrypt",
-            "librewolf",
             "pandora-launcher",
             "helium-browser",
             "feishin",
-            "virt-manager"
+            "virt-manager",
+            "zen-browser-twilight"
         ],
         "position": "center",
         "screenshotAnnotationTool": "",

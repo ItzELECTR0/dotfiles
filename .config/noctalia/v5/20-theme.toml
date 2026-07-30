@@ -1,0 +1,38 @@
+# ─── Theme & templates ────────────────────────────────────────────────────
+# Migrated from v4 settings.json: "colorSchemes", "templates"
+# and user-templates.toml
+
+[theme]
+# v4 colorSchemes.darkMode = true, schedulingMode = "off"
+mode = "dark"
+# v4 colorSchemes.predefinedScheme = "Electrified" was a user colorscheme in
+# colorschemes/Electrified/. v5 calls these "custom palettes" and reads them
+# from palettes/<name>.json — the file format is identical.
+source = "custom"
+custom_palette = "Electrified"
+# Kept for when you switch source to builtin/wallpaper:
+builtin = "Noctalia"
+# v4 colorSchemes.generationMethod = "tonal-spot"
+wallpaper_scheme = "m3-tonal-spot"
+pure_black_dark = false
+
+[theme.templates]
+enable_builtin_templates = true
+enable_community_templates = true
+
+# v4 templates.activeTemplates. Several v4 templates moved to the community
+# catalog in v5, and v4's single "gtk" became gtk3 + gtk4.
+#   btop, qt, kitty, ghostty, gtk -> built-in
+#   discord, telegram, hyprtoolkit, fuzzel, steam -> community
+builtin_ids = [ "btop", "qt", "kitty", "ghostty", "gtk3", "gtk4" ]
+community_ids = [ "discord", "telegram", "hyprtoolkit", "fuzzel", "steam" ]
+
+# v4 user-templates.toml. The template files themselves are unchanged and
+# still live in templates/ — v4 and v5 share them.
+[theme.templates.user.wofi]
+input_path = "$XDG_CONFIG_HOME/noctalia/templates/wofi.css"
+output_path = "$XDG_CONFIG_HOME/wofi/style.css"
+
+[theme.templates.user.pandora]
+input_path = "$XDG_CONFIG_HOME/noctalia/templates/pandora.json"
+output_path = "$XDG_DATA_HOME/PandoraLauncher/themes/noctalia.json"

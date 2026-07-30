@@ -7,7 +7,10 @@ hl.workspace_rule({workspace = 5, monitor = "HDMI-A-1", persistent = true})
 hl.workspace_rule({workspace = 6, monitor = "HDMI-A-1", default = true, persistent = true})
 
 ---[===Layer=Rules===]---
-hl.layer_rule({match = {namespace = "noctalia-background-.*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})
+-- Namespaces cover both Noctalia v4 and v5 surfaces; v5 adds window-switcher
+-- and replaces the v4 "background" layer with "backdrop".
+hl.layer_rule({match = {namespace = "^noctalia-(background|backdrop).*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})
+hl.layer_rule({match = {namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd|window-switcher)$"}, no_anim = true, ignore_alpha = 0.5, blur = true, blur_popups = true})
 
 ---[===Shape=Rules===]---
 --hl.plugin.dynamic_cursors.shape_rule({shape = "grab", mode = "tilt", tilt = {limit = 2000, window = 100}})
@@ -31,8 +34,10 @@ hl.window_rule({match = {class = "cs2"}, immediate = true, monitor = "DP-1", wor
 hl.window_rule({match = {class = "[Hh]elium"}, opaque = true})
 
 ---[===Main=Monitor=Apps===]---
-hl.window_rule({match = {class = "[Ll]ibrewolf"}, opaque = true, no_initial_focus = true, monitor = "DP-1", workspace = 1})
-hl.window_rule({match = {class = "[Ll]ibrewolf", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
+hl.window_rule({match = {class = "librewolf"}, opaque = true, no_initial_focus = true, monitor = "DP-1", workspace = 1})
+hl.window_rule({match = {class = "librewolf", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
+hl.window_rule({match = {class = "zen|zen-twilight"}, opaque = true, no_initial_focus = true, monitor = "DP-1", workspace = 1})
+hl.window_rule({match = {class = "zen|zen-twilight", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
 hl.window_rule({match = {class = "com.mojang.[Mm]inecraft"}, immediate = true, monitor = "DP-1", no_initial_focus = true, fullscreen = true, workspace = 2})
 hl.window_rule({match = {class = "[Pp]andora[Ll]auncher", title = "Minecraft Game Output"}, monitor = "DP-1", workspace = 2})
 hl.window_rule({match = {class = "Unity"}, monitor = "DP-1", no_initial_focus = true, workspace = 3})
@@ -48,12 +53,17 @@ hl.window_rule({match = {class = "[Ff]eishin"}, monitor = "HDMI-A-1", workspace 
 ---[===Floating=Windows===]---
 hl.window_rule({match = {class = "librewolf", float = true}, size = "1640 980"})
 hl.window_rule({match = {class = "librewolf", title = "Extension:.*"}, float = true})
+hl.window_rule({match = {class = "zen|zen-twilight", float = true}, size = "1640 980"})
+hl.window_rule({match = {class = "zen|zen-twilight", title = "Extension:.*"}, float = true})
 hl.window_rule({match = {class = "twintaillauncher"}, float = true, size = "1460 800"})
+hl.window_rule({match = {title = "Twintail Launcher"}, float = true, size = "1460 800"})
+hl.window_rule({match = { class = "dev.noctalia.Noctalia" }, float = true, size = { 1080, 920 }})
+hl.window_rule({match = {class = "com.system76.CosmicMonitor"}, float = true, size = "1050 1020"})
 hl.window_rule({match = {class = "localsend"}, float = true, size = "1000 660"})
 hl.window_rule({match = {class = "motrix-next"}, float = true, size = "960 830"})
 hl.window_rule({match = {class = "[Ww]aydroid|^waydroid\\.com\\..*$"}, size = "1920 1080", float = true, center = true})
 hl.window_rule({match = {class = "com.vysp3r.ProtonPlus|net.davidotek.pupgui2"}, float = true})
-hl.window_rule({match = {class = "io.ente.auth", title = "Ente Auth"}, size = "770 1100", float = true, center = true})
+hl.window_rule({match = {class = "io.ente.auth"}, size = "770 1100", float = true, center = true})
 hl.window_rule({match = {class = "io.frama.tractor.carburetor"}, size = "600 700", float = true})
 hl.window_rule({match = {class = "kitty-floating"}, size = "970 640", float = true, center = true})
 hl.window_rule({match = {class = "blueman-manager|io.github.kaii_lb.Overskride", title = "Bluetooth Devices|overskride"}, size = "850 465", float = true, center = true})
@@ -82,8 +92,9 @@ hl.window_rule({match = {title = "Visual Studio Installer"}, float = true, cente
 hl.window_rule({match = {title = "Picture-in-Picture"}, float = true})
 
 ---[===Border=Colors===]---
-hl.window_rule({match = {title = ".*Hyprland.*", class = "negative:firefox|librewolf|chromium|helium"}, border_color = "rgb(FFFF00)"})
-hl.window_rule({match = {class = "[Ll]ibrewolf", title = ".*Private Browsing.*"}, border_color = "rgb(a020f0)"})
+hl.window_rule({match = {title = ".*Hyprland.*", class = "negative:firefox|librewolf|zen|zen-twilight|chromium|helium"}, border_color = "rgb(FFFF00)"})
+hl.window_rule({match = {class = "librewolf", title = ".*Private Browsing.*"}, border_color = "rgb(a020f0)"})
+hl.window_rule({match = {class = "zen|zen-twilight", title = ".*Private Browsing.*"}, border_color = "rgb(a020f0)"})
 hl.window_rule({match = {class = "[Ss]team|[Hh]eroic"}, border_color = "rgba(33ccffee)"})
 hl.window_rule({match = {title = "[Ss]team"}, border_color = "rgba(33ccffee)"})
 hl.window_rule({match = {class = "modrinth-app"}, border_color = "rgba(1bd96aff)"})

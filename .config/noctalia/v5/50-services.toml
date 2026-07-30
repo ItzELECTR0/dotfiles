@@ -1,0 +1,179 @@
+# ─── Services ─────────────────────────────────────────────────────────────
+# Migrated from v4 settings.json: audio, brightness, location, nightLight,
+# notifications, osd, systemMonitor, idle + notification-rules.json
+
+# v4 "audio"
+[audio]
+# v4 volumeOverdrive
+enable_overdrive = true
+# v4 volumeFeedback / notifications.sounds.enabled
+enable_sounds = false
+sound_volume = 0.4
+
+# v4 systemMonitor.batteryWarningThreshold (v5 adds fixed 5% / 2% escalation
+# steps of its own; v4 batteryCriticalThreshold = 5 matches the first of them)
+[battery]
+warning_threshold = 20
+
+# v4 "brightness"
+[brightness]
+# v4 enableDdcSupport
+enable_ddcutil = true
+ignore_mmids = []
+# v4 enforceMinimum = true was a boolean; v5 wants an explicit floor
+minimum_brightness = 0.01
+sync_all_monitors = false
+
+# v4 "location". Coordinates come from the geocoded address because v4
+# nightLight.autoSchedule was true (astronomical sunrise/sunset), so no
+# custom_schedule is set. v4's manualSunrise/manualSunset values are kept
+# below as a comment in case you want fixed times instead.
+[location]
+auto_locate = false
+address = "Hârșova, Constanța, România"
+custom_schedule = false
+# sunrise = "07:00"
+# sunset  = "22:30"
+
+# v4 location.weatherEnabled / useFahrenheit / weatherShowEffects
+[weather]
+enabled = true
+unit = "metric"
+effects = true
+refresh_minutes = 30
+
+# v4 "nightLight"
+[nightlight]
+enabled = true
+force = false
+temperature_day = 6500
+temperature_night = 3000
+
+# v4 "notifications"
+[notification]
+enable_daemon = true
+position = "top_right"
+# v4 overlayLayer
+layer = "overlay"
+monitors = [ "DP-1" ]
+background_opacity = 0.9
+border = true
+scale = 1.0
+offset_x = 20
+offset_y = 8
+show_app_name = true
+show_actions = true
+collapse_on_dismiss = true
+history_retention_hours = 0
+filter_order = [ "discord" ]
+
+# v4 notification-rules.json: { pattern: "discord", action: "hide" }
+[notification.filter.discord]
+enabled = true
+match = "discord"
+show_toast = false
+save_history = true
+play_sound = false
+
+# v4 "osd"
+[osd]
+enabled = true
+position = "top_right"
+position_vertical = "top_center"
+orientation = "horizontal"
+monitors = []
+background_opacity = 1.0
+border = true
+scale = 1.0
+offset_x = 20
+offset_y = 8
+
+[osd.kinds]
+volume = true
+volume_output = true
+volume_input = true
+brightness = true
+wifi = true
+bluetooth = true
+power_profile = true
+caffeine = true
+nightlight = true
+dnd = true
+lock_keys = true
+# v4 notifications.enableKeyboardLayoutToast
+keyboard_layout = true
+# v4 notifications.enableMediaToast = false
+media = false
+privacy = true
+keyboard_backlight = true
+
+# ─── System monitor ───────────────────────────────────────────────────────
+# v4 "systemMonitor". v4's "warning" maps to v5's "activity" threshold and
+# v4's "critical" to v5's "critical".
+[system.monitor]
+enabled = true
+cpu_poll_seconds = 2.0
+gpu_poll_seconds = 5.0
+memory_poll_seconds = 2.0
+network_poll_seconds = 3.0
+disk_poll_seconds = 10.0
+
+# v4 cpuWarningThreshold / cpuCriticalThreshold
+cpu_usage_activity_threshold = 95.0
+cpu_usage_critical_threshold = 100.0
+# v4 tempWarningThreshold / tempCriticalThreshold
+cpu_temp_activity_threshold = 70.0
+cpu_temp_critical_threshold = 80.0
+gpu_temp_activity_threshold = 70.0
+gpu_temp_critical_threshold = 80.0
+# v4 gpuWarningThreshold / gpuCriticalThreshold
+gpu_usage_activity_threshold = 80.0
+gpu_usage_critical_threshold = 90.0
+gpu_vram_activity_threshold = 80.0
+gpu_vram_critical_threshold = 90.0
+# v4 memWarningThreshold / memCriticalThreshold
+ram_pct_activity_threshold = 80.0
+ram_pct_critical_threshold = 90.0
+# v4 swapWarningThreshold / swapCriticalThreshold
+swap_pct_activity_threshold = 80.0
+swap_pct_critical_threshold = 90.0
+# v4 diskWarningThreshold / diskCriticalThreshold
+disk_used_pct_activity_threshold = 80.0
+disk_used_pct_critical_threshold = 90.0
+disk_used_activity_threshold = 80.0
+disk_used_critical_threshold = 90.0
+# v4 diskAvailWarningThreshold / diskAvailCriticalThreshold. Note the polarity
+# differs: v5 tints as the value *rises*, so on a "free space" stat these read
+# the opposite way round from v4's "warn when low".
+disk_free_pct_activity_threshold = 30.0
+disk_free_pct_critical_threshold = 5.0
+disk_free_activity_threshold = 30.0
+disk_free_critical_threshold = 5.0
+
+# ─── Idle ─────────────────────────────────────────────────────────────────
+# v4 "idle": enabled = false, so every behaviour stays disabled but keeps its
+# v4 timeout. v4 fadeDuration = 5.
+[idle]
+behavior_order = [ "lock", "screen-off", "suspend" ]
+pre_action_fade_seconds = 5.0
+
+[idle.behavior.lock]
+action = "lock"
+enabled = false
+timeout = 660.0
+
+[idle.behavior.screen-off]
+action = "screen_off"
+enabled = false
+timeout = 600.0
+
+# v4 suspendTimeout = 0 (disabled)
+[idle.behavior.suspend]
+action = "lock_and_suspend"
+enabled = false
+timeout = 0.0
+
+# v5 only — CalDAV/Google calendar sync, which v4 had no equivalent for.
+[calendar]
+enabled = false
+refresh_minutes = 15

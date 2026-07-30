@@ -1,0 +1,188 @@
+# ─── Desktop surfaces, control center, plugins ────────────────────────────
+# Migrated from v4 settings.json: wallpaper, dock, desktopWidgets,
+# controlCenter, general (lock screen), hooks, plugins
+
+# ─── Control Center ───────────────────────────────────────────────────────
+# v4 controlCenter. v5 replaced v4's "cards" with tabs; the only v4 card that
+# was switched off ("brightness-card") corresponds to the "monitor" tab.
+[control_center]
+sidebar = "compact"
+sidebar_section = "compact"
+width = 700
+hidden_tabs = [ "monitor" ]
+# control_center.show_shortcut_labels is not a setting in this build.
+
+# v4 calendar.cards + location.showWeekNumberInCalendar
+[control_center.calendar]
+show_events_card = false
+show_week_numbers = true
+event_date_format = "%A %e %B"
+event_time_format = "%H:%M"
+
+# v4 controlCenter.shortcuts, left column then right column:
+#   Network, Bluetooth, WallpaperSelector, NoctaliaPerformance
+#   Notifications, PowerProfile, KeepAwake, NightLight
+# NoctaliaPerformance has no v5 equivalent and is dropped. That leaves seven,
+# but v5 only renders the first six — "caffeine" (v4 KeepAwake) is the one
+# that falls off the end. Reorder if you'd rather lose a different one.
+[[control_center.shortcuts]]
+type = "wifi"
+
+[[control_center.shortcuts]]
+type = "bluetooth"
+
+[[control_center.shortcuts]]
+type = "wallpaper"
+
+[[control_center.shortcuts]]
+type = "notification"
+
+[[control_center.shortcuts]]
+type = "power_profile"
+
+[[control_center.shortcuts]]
+type = "nightlight"
+
+[[control_center.shortcuts]]
+type = "caffeine"
+
+# ─── Lock screen ──────────────────────────────────────────────────────────
+# v4 general.lockScreen*
+[lockscreen]
+enabled = true
+fingerprint = true
+allow_empty_password = false
+blurred_desktop = false
+blur_intensity = 0.2
+tint_intensity = 0.1
+monitors = [ "DP-1" ]
+wallpaper = ""
+
+# ─── Wallpaper ────────────────────────────────────────────────────────────
+# v4 "wallpaper" — disabled there too, because linux-wallpaperengine draws the
+# desktop instead (see hypr/lua/programs/autostart.lua).
+[wallpaper]
+enabled = false
+directory = "/home/ELECTRO/Pictures/Wallpapers"
+per_monitor_directories = false
+# v4 fillMode / fillColor
+fill_mode = "center"
+fill_color = "#000000"
+# v4 transitionType. v4's "pixelate" has no v5 equivalent and is dropped;
+# "zoom" is v5-only and left out to keep the pool identical to v4's.
+transition = [ "fade", "disc", "stripes", "wipe", "honeycomb" ]
+transition_duration = 1500.0
+edge_smoothness = 0.05
+# v4 skipStartupTransition = false
+transition_on_startup = true
+
+[wallpaper.automation]
+enabled = false
+interval_seconds = 300
+order = "random"
+recursive = true
+
+# v4 wallpaper.overviewEnabled / overviewBlur / overviewTint
+[backdrop]
+enabled = false
+blur_intensity = 0.4
+tint_intensity = 0.6
+
+# ─── Dock ─────────────────────────────────────────────────────────────────
+# v4 "dock" — disabled in v4 too, settings carried over so it looks right if
+# you ever switch it on.
+[dock]
+enabled = false
+position = "bottom"
+# v4 dock.size = 0.8 was a ratio; v5 wants pixels (0.8 x the 48px default)
+icon_size = 38
+background_opacity = 0.6
+# v4 displayMode = "auto_hide"
+auto_hide = true
+smart_auto_hide = false
+reserve_space = true
+layer = "top"
+active_monitor_only = false
+monitors = []
+# v4 deadOpacity
+inactive_opacity = 0.6
+active_opacity = 1.0
+# v4 showDockIndicator + groupIndicatorStyle = "dots"
+show_dots = true
+show_instance_count = true
+show_running = true
+# v4 showLauncherIcon + launcherPosition + launcherUseDistroLogo
+launcher_position = "start"
+launcher_icon = "grid-dots"
+magnification = true
+magnification_scale = 1.45
+radius = 16
+
+# v4 dock.pinnedApps was empty, but v4 appLauncher.pinnedApps held this list
+# and v5's launcher has no pinned-apps concept — the dock is the only place
+# left that can hold it, so it is preserved here.
+pinned = [
+    "steam",
+    "discord-canary",
+    "7zFM",
+    "io.element.Element",
+    "com.heroicgameslauncher.hgl",
+    "Wondershare Filmora 15",
+    "org.jellyfin.JellyfinDesktop",
+    "Waydroid",
+    "unityhub",
+    "vscodium-insiders",
+    "com.stremio.Stremio",
+    "obsidian",
+    "com.obsproject.Studio",
+    "VeraCrypt",
+    "pandora-launcher",
+    "helium-browser",
+    "feishin",
+    "virt-manager",
+    "zen-browser-twilight"
+]
+
+# ─── Desktop widgets ──────────────────────────────────────────────────────
+# v4 desktopWidgets.enabled = false (v5 defaults this to true)
+[desktop_widgets]
+enabled = false
+
+# ─── Hooks ────────────────────────────────────────────────────────────────
+# v4 "hooks": enabled = false with every command empty.
+[hooks]
+started = []
+colors_changed = []
+theme_mode_changed = []
+wallpaper_changed = []
+session_locked = []
+session_unlocked = []
+logging_out = []
+rebooting = []
+shutting_down = []
+
+# ─── Plugins ──────────────────────────────────────────────────────────────
+# v4 plugins.json listed obs-control, privacy-indicator and tailscale. None of
+# them exist for v5: privacy-indicator is now the built-in "privacy" bar
+# widget, and the other two have no counterpart in the official or community
+# catalogs. The list below is the set already enabled in v5.
+[plugins]
+auto_update = true
+enabled = [
+    "noctalia/kaomoji",
+    "noctalia/bitwarden",
+    "lowcache/claude-companion",
+    "yuuto/calculator"
+]
+
+[[plugins.source]]
+name = "official"
+kind = "git"
+location = "https://github.com/noctalia-dev/official-plugins"
+enabled = true
+
+[[plugins.source]]
+name = "community"
+kind = "git"
+location = "https://github.com/noctalia-dev/community-plugins"
+enabled = true

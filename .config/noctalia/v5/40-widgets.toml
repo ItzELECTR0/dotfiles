@@ -1,0 +1,139 @@
+# ─── Bar widgets ──────────────────────────────────────────────────────────
+# Migrated from v4 settings.json: "bar.widgets"
+#
+# v4 "displayMode": "onhover" (icon always, label on hover) has no v5
+# equivalent — v5 labels are a plain on/off. Every onhover widget below uses
+# show_label = false (icon only), which is the closer of the two. Flip to true
+# on any widget where you'd rather always see the value.
+
+# ─── start (v4 "left") ────────────────────────────────────────────────────
+
+# v4 Clock. Qt format tokens became strftime:
+#   HH:mm:ss | dddd | MMM dd  ->  %H:%M:%S | %A | %b %d
+[widget.clock]
+type = "clock"
+format = "%H:%M:%S | %A | %b %d"
+vertical_format = "%H %M - %d %m"
+tooltip_format = "%Y-%m-%d"
+
+# v4 ActiveWindow: showIcon = false + showText = true -> "text_only",
+# scrollingMode = "hover" -> "on_hover", hideMode = "hidden" -> no empty label
+[widget.active_window]
+type = "active_window"
+display = "text_only"
+title_scroll = "on_hover"
+max_length = 170
+min_length = 80
+icon_size = 14
+show_empty_label = false
+
+# ─── center ───────────────────────────────────────────────────────────────
+
+# v4 Workspace
+[widget.workspaces]
+type = "workspaces"
+style = "regular"
+# v4 labelMode = "name", characterCount = 2
+display = "name"
+max_label_chars = 2
+# v4 pillSize
+pill_scale = 0.7
+focused_color = "primary"
+occupied_color = "secondary"
+empty_color = "secondary"
+urgent_color = "error"
+# v4 hideUnoccupied / showLabelsOnlyWhenOccupied / followFocusedScreen
+hide_when_empty = false
+labels_only_when_occupied = false
+focused_output_only = false
+# v4 fontWeight = "bold"
+font_weight = 700
+
+# ─── end (v4 "right") ─────────────────────────────────────────────────────
+
+# v4 plugin:privacy-indicator — this is a built-in widget in v5.
+# (activeColor "primary", inactiveColor "none" -> v5 default "outline")
+[widget.privacy]
+type = "privacy"
+hide_inactive = false
+icon_spacing = 4
+active_color = "primary"
+inactive_color = "outline"
+
+[widget.network]
+type = "network"
+show_label = false
+
+[widget.bluetooth]
+type = "bluetooth"
+show_label = false
+hide_when_no_connected_device = false
+
+# v4 Tray: drawerEnabled -> drawer, blacklist -> hidden
+[widget.tray]
+type = "tray"
+drawer = true
+drawer_columns = 3
+hidden = []
+pinned = [
+    "DiscordCanary",
+    "steam",
+    "Element | varrow",
+    "Feishin",
+    "Element"
+]
+
+[widget.brightness]
+type = "brightness"
+show_label = false
+
+# v4 Battery: displayMode "graphic-clean" = graphic body, no percentage text
+[widget.battery]
+type = "battery"
+display_mode = "graphic"
+show_label = false
+device = "auto"
+hide_when_plugged = false
+hide_when_full = false
+warning_color = "error"
+
+[widget.volume]
+type = "volume"
+device = "output"
+show_label = false
+mute_color = "error"
+
+# v4 Volume middleClickCommand
+[widget.volume.actions]
+middle = "exec pwvucontrol || pavucontrol"
+
+[widget.keyboard_layout]
+type = "keyboard_layout"
+show_icon = true
+show_label = false
+display = "short"
+hide_when_single_layout = false
+
+# v4 NotificationHistory: hideWhenZero
+[widget.notifications]
+type = "notifications"
+hide_when_no_unread = true
+
+# v4 ControlCenter: customIconPath + enableColorization + colorizeSystemIcon
+[widget.control-center]
+type = "control-center"
+custom_image = "/home/ELECTRO/Desktop/Stuff/ELECTRO/PFP/V10/PFP-V10_nobg.png"
+custom_image_colorize = true
+icon_color = "primary"
+
+# v4 SessionMenu
+[widget.session]
+type = "session"
+glyph = "shutdown"
+icon_color = "primary"
+
+# ─── Not migrated ─────────────────────────────────────────────────────────
+# v4 had two plugin widgets with no v5 counterpart yet:
+#   plugin:obs-control (bar center)  — closest v5 option is the official
+#                                      noctalia/screen_recorder plugin
+#   plugin:tailscale   (bar end)     — no v5 plugin exists

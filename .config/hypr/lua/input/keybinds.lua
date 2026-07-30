@@ -59,7 +59,7 @@ local function start_WE()
 end
 
 local function start_QS()
-    os.execute("qs -c noctalia-shell &")
+    os.execute(noctaliaStart .. " &")
 end
 
 -- App Control --
@@ -68,7 +68,7 @@ hl.bind(MOD .. " + W", function()
         os.execute("killall -9 linux-wallpaperengine")
         shell_state = 1
     elseif shell_state == 1 then
-        os.execute("killall -9 qs")
+        os.execute("killall -9 " .. noctaliaProc)
         shell_state = 2
     else
         start_WE()
@@ -98,26 +98,32 @@ hl.bind(MOD .. " + O", hl.dsp.exec_cmd(notes))
 hl.bind(MOD .. " + ALT + B", hl.dsp.exec_cmd(alternateBrowser))
 hl.bind(MOD .. " + SHIFT + B", hl.dsp.exec_cmd(privateBrowser))
 hl.bind(MOD .. " + Super_L", hl.dsp.exec_cmd(menu))
-hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(noctalia .. " controlCenter toggle"))
-hl.bind(MOD .. " + comma", hl.dsp.exec_cmd(noctalia .. " settings toggle"))
+hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(nocControlCenter))
+hl.bind(MOD .. " + comma", hl.dsp.exec_cmd(nocSettings))
 hl.bind(MOD .. " + period", hl.dsp.exec_cmd("emote"))
 hl.bind(MOD .. " + RETURN", hl.dsp.exec_cmd(terminal))
 hl.bind(MOD .. " + SHIFT + RETURN", hl.dsp.exec_cmd(terminal_float))
+hl.bind("CTRL + SHIFT + ESCAPE", hl.dsp.exec_cmd(sysmon))
 hl.bind("CTRL + ALT + I", hl.dsp.exec_cmd(sysinfo))
 
 -- Media Control --
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(noctalia .. " volume increase"), { repeating = true, locked = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(noctalia .. " volume decrease"), { repeating = true, locked = true })
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd(noctalia .. " volume muteOutput"), { locked = true })
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(noctalia .. " brightness increase"), { repeating = true, locked = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(noctalia .. " brightness decrease"), { repeating = true, locked = true })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(nocVolumeUp), { repeating = true, locked = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(nocVolumeDown), { repeating = true, locked = true })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd(nocVolumeMute), { locked = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(nocBrightnessUp), { repeating = true, locked = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(nocBrightnessDown), { repeating = true, locked = true })
 
 -- Screenshot Tools --
 hl.bind(MOD .. " + SHIFT + S", hl.dsp.exec_cmd(hyprcap))
 hl.bind("PRINT", hl.dsp.exec_cmd(screenshot))
 
 -- Lockscreen Control --
-hl.bind(MOD .. " + SHIFT + L", hl.dsp.exec_cmd(noctalia .. " lockScreen lock"))
+hl.bind(MOD .. " + SHIFT + L", hl.dsp.exec_cmd(nocLock))
+
+-- v5 only: Alt+Tab style window switcher overlay.
+-- if nocWindowSwitcher then
+--     hl.bind("ALT + TAB", hl.dsp.exec_cmd(nocWindowSwitcher))
+-- end
 
 -- Monitor Control --
 hl.bind("CTRL + F1", function() toggle_brightness(2, {0, 80}) end)
@@ -138,7 +144,7 @@ hl.bind("F11", hl.dsp.window.fullscreen({ mode = 0 }))
 hl.bind(MOD .. " + F", hl.dsp.window.fullscreen({ mode = 1 }))
 hl.bind(MOD .. " + Q", hl.dsp.window.close())
 hl.bind(MOD .. " + SHIFT + Q", function() forceKillActive() end)
-hl.bind(MOD .. " + V", hl.dsp.window.float({ action = "toggle" }))
+hl.bind(MOD .. " + SHIFT + SPACE", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(MOD .. " + SHIFT + C", hl.dsp.window.center())
 hl.bind(MOD .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(MOD .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
