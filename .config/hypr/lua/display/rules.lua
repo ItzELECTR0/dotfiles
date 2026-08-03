@@ -65,7 +65,7 @@ hl.window_rule({match = {class = "[Ww]aydroid|^waydroid\\.com\\..*$"}, size = "1
 hl.window_rule({match = {class = "com.vysp3r.ProtonPlus|net.davidotek.pupgui2"}, float = true})
 hl.window_rule({match = {class = "io.ente.auth"}, size = "770 1100", float = true, center = true})
 hl.window_rule({match = {class = "io.frama.tractor.carburetor"}, size = "600 700", float = true})
-hl.window_rule({match = {class = "kitty-floating"}, size = "970 640", float = true, center = true})
+hl.window_rule({match = {class = "kitty-floating"}, size = "975 640", float = true, center = true})
 hl.window_rule({match = {class = "blueman-manager|io.github.kaii_lb.Overskride", title = "Bluetooth Devices|overskride"}, size = "850 465", float = true, center = true})
 hl.window_rule({match = {class = "org.pulseaudio.pavucontrol", title = "Volume Control"}, size = "600 800", float = true, center = true})
 hl.window_rule({match = {class = "Bitwarden"}, size = "900 850", float = true, center = true})

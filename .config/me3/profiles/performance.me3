@@ -1,0 +1,11 @@
+profileVersion = "v1"
+
+[[supports]]
+game = "eldenring"
+
+[[packages]]
+id = "performance"
+path = 'mod'
+
+[[natives]]
+path = 'natives/UnlockTheFps.dll'

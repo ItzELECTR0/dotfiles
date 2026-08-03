@@ -264,6 +264,7 @@ Set-Alias devices Show-Devices
 Set-Alias elts Start-ELTS
 Set-Alias twaos Start-TWAOS
 Set-Alias macOS Start-macOS
+Set-Alias macmount Mount-macOS
 Set-Alias depotbuild Start-SteamDepotBuild
 
 # INFORMATION
@@ -564,8 +565,11 @@ function Open-Directory {
 }
 
 function Start-macOS {
-    cd $HOME/.osx-kvm
     bash -c "$HOME/.osx-kvm/OpenCore-Boot.sh"
+}
+
+function Mount-macOS {
+    bash -c "$HOME/.dotfiles/scripts/macmount.sh"
 }
 
 function Start-MediaManagement {

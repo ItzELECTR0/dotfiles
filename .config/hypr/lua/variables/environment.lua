@@ -1,5 +1,5 @@
 hl.env("OWNER", "ELECTRO")
-hl.env("show_distro", "Artix Linux")
+hl.env("show_distro", "Arch Linux")
 hl.env("DISPLAY", ":0")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
 hl.env("LIBVA_DRIVER_NAME", "nvidia")

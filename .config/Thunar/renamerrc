@@ -1,6 +1,6 @@
 [Configuration]
 LastActiveMode=THUNAR_RENAMER_MODE_BOTH
-LastActiveRenamer=ThunarSbrReplaceRenamer
+LastActiveRenamer=ThunarSbrInsertRenamer
 
 [ThunarSbrRemoveRenamer]
 StartOffset=11
@@ -8,15 +8,15 @@ EndOffset=12
 EndOffsetMode=THUNAR_SBR_OFFSET_MODE_LEFT
 StartOffsetMode=THUNAR_SBR_OFFSET_MODE_LEFT
 
+[ThunarSbrReplaceRenamer]
+CaseSensitive=FALSE
+Replacement=Chapter\ 
+Pattern=FF
+Regexp=FALSE
+
 [ThunarSbrInsertRenamer]
-Offset=6
+Offset=0
 Text=0
 Mode=THUNAR_SBR_INSERT_MODE_INSERT
 OffsetMode=THUNAR_SBR_OFFSET_MODE_LEFT
-
-[ThunarSbrReplaceRenamer]
-CaseSensitive=FALSE
-Replacement=TS-Isekai-ch07-
-Pattern=63_isekai_7_Output_0
-Regexp=FALSE
 
