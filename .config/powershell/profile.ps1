@@ -565,6 +565,7 @@ function Open-Directory {
 }
 
 function Start-macOS {
+    cd $HOME/.osx-kvm
     bash -c "$HOME/.osx-kvm/OpenCore-Boot.sh"
 }
 

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# vfio-recover - put the host GPU and desktop back by hand.
+#
+# For when the VM died in a way that skipped release/end, or a hook was killed
+# partway through. Safe to run over SSH from a headless box, and safe to run
+# twice. Same code path as the release/end hook.
+#
+#   doas vfio-recover
+
+set -uo pipefail
+
+[ "$(id -u)" -eq 0 ] || { echo "must run as root" >&2; exit 1; }
+
+VFIO_TAG=vfio-recover
+. /etc/libvirt/hooks/vfio-lib.sh
+
+# The revert hook no-ops without a teardown marker. When recovering by hand the
+# marker may be gone (or never written), so synthesise one.
+state_has active || state_set active manual
+
+if [ -z "$(state_get devices)" ]; then
+    mapfile -t found < <(
+        for l in /sys/bus/pci/drivers/vfio-pci/0000:*; do
+            [ -e "$l" ] && basename "$l"
+        done
+    )
+    if [ "${#found[@]}" -gt 0 ]; then
+        state_set devices "${found[*]}"
+        vfio_log "detected devices on vfio-pci: ${found[*]}"
+    else
+        vfio_log "nothing bound to vfio-pci; will still reload the GPU driver and restart the display manager"
+    fi
+fi
+
+REVERT=""
+for f in /etc/libvirt/hooks/qemu.d/*/release/end/revert.sh; do
+    [ -x "$f" ] && { REVERT="$f"; break; }
+done
+[ -n "$REVERT" ] || { echo "no revert.sh found under /etc/libvirt/hooks/qemu.d" >&2; exit 1; }
+
+exec "$REVERT" "${1:-manual-recovery}" release end </dev/null

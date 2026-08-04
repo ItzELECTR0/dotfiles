@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# /etc/libvirt/hooks/qemu - dispatcher
+#
+# Fans a libvirt qemu hook out to /etc/libvirt/hooks/qemu.d/<guest>/<hook>/<state>,
+# passing the domain XML through on stdin to each script.
+#
+# Differences from the widely-copied upstream dispatcher:
+#   - no eval, so paths with spaces and shell metacharacters are safe
+#   - each hook runs under a hard timeout so a wedged script cannot block
+#     libvirtd forever
+#   - the failure of one hook is reported with its name instead of a bare
+#     "unexpected exit status"
+
+set -uo pipefail
+
+GUEST_NAME="${1:-}"
+HOOK_NAME="${2:-}"
+STATE_NAME="${3:-}"
+
+BASEDIR="$(dirname "$(readlink -f "$0")")"
+HOOKPATH="$BASEDIR/qemu.d/$GUEST_NAME/$HOOK_NAME/$STATE_NAME"
+
+# Buffer stdin once so every hook gets its own copy of the domain XML.
+STDIN="$(cat)"
+
+# Teardown may legitimately take a while (module refcounts, DM shutdown).
+# Restore must not be cut short, so give it a lot more room than prepare.
+case "$HOOK_NAME/$STATE_NAME" in
+    release/end|stopped/end) HOOK_TIMEOUT=300 ;;
+    *)                       HOOK_TIMEOUT=120 ;;
+esac
+
+run_hook() {
+    local script="$1" rc=0
+    timeout --kill-after=10 "$HOOK_TIMEOUT" \
+        "$script" "$GUEST_NAME" "$HOOK_NAME" "$STATE_NAME" "${@:2}" <<<"$STDIN" || rc=$?
+    if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+        echo "hook $script timed out after ${HOOK_TIMEOUT}s" >&2
+    elif [ "$rc" -ne 0 ]; then
+        echo "hook $script exited $rc" >&2
+    fi
+    return "$rc"
+}
+
+rc=0
+if [ -f "$HOOKPATH" ] && [ -s "$HOOKPATH" ] && [ -x "$HOOKPATH" ]; then
+    run_hook "$HOOKPATH" "${@:4}" || rc=$?
+elif [ -d "$HOOKPATH" ]; then
+    while IFS= read -r file; do
+        [ -n "$file" ] || continue
+        run_hook "$file" "${@:4}" || rc=$?
+    done < <(find -L "$HOOKPATH" -maxdepth 1 -type f -executable -print | sort)
+fi
+
+exit "$rc"

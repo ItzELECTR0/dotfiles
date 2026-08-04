@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# release/end - give the GPU back to the host.
+#
+# This also runs when the domain FAILED to start, which is the only thing
+# standing between a bad domain definition and a headless machine. It must
+# therefore never abort early and never do anything that can kill its own
+# process. Ordering rule:
+#
+#   release vfio -> load GPU driver -> WAIT FOR A FRAMEBUFFER -> rebind console
+#
+# The wait is not cosmetic. Binding fbcon with zero registered framebuffers
+# NULL-derefs fbcon_cursor() in the kernel and kills this script mid-run, which
+# is exactly how a failed start turns into "no signal until you hit reset".
+
+set -uo pipefail
+
+VFIO_TAG=vfio-revert
+. /etc/libvirt/hooks/vfio-lib.sh
+
+GUEST="${1:-unknown}"
+XML="$(cat 2>/dev/null || true)"
+
+vfio_log "=== release/end for domain '$GUEST' ==="
+
+# If prepare/begin never got past its preflight there is nothing to undo, and
+# touching the console here would be actively harmful.
+if ! state_has active; then
+    vfio_log "no teardown marker - prepare/begin never handed the GPU over; nothing to do"
+    exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# 1. Recover the device list
+# ---------------------------------------------------------------------------
+
+read -r -a GPU_DEVS <<<"$(state_get devices)"
+
+if [ "${#GPU_DEVS[@]}" -eq 0 ] && [ -n "$XML" ]; then
+    mapfile -t GPU_DEVS < <(xml_pci_hostdevs "$XML")
+fi
+if [ "${#GPU_DEVS[@]}" -eq 0 ]; then
+    # Last resort: whatever is currently sitting on vfio-pci.
+    mapfile -t GPU_DEVS < <(
+        for l in /sys/bus/pci/drivers/vfio-pci/0000:*; do
+            [ -e "$l" ] && basename "$l"
+        done
+    )
+fi
+vfio_log "restoring functions: ${GPU_DEVS[*]:-<none>}"
+
+HOST_GPU_DRIVER="$(state_get gpu_driver)"
+[ -n "$HOST_GPU_DRIVER" ] || HOST_GPU_DRIVER=nvidia
+
+# ---------------------------------------------------------------------------
+# 2. Take the functions off vfio-pci
+# ---------------------------------------------------------------------------
+# With managed='yes' libvirt already did this. Doing it again is a no-op; doing
+# it when libvirt did not (failed start, crashed qemu) is what saves the boot.
+
+for d in "${GPU_DEVS[@]:-}"; do
+    [ -n "$d" ] || continue
+    [ -d "/sys/bus/pci/devices/$d" ] || continue
+    if [ "$(pci_driver_of "$d" 2>/dev/null || true)" = "vfio-pci" ]; then
+        pci_unbind "$d"
+    fi
+    pci_clear_override "$d"
+done
+
+for m in $VFIO_MODULES; do
+    mod_unload "$m" 8 || true      # non-fatal: another VM may still hold vfio
+done
+
+# ---------------------------------------------------------------------------
+# 3. Bring the host GPU driver back
+# ---------------------------------------------------------------------------
+
+STACK="$(gpu_module_stack "$HOST_GPU_DRIVER")"
+# gpu_module_stack lists teardown order (outermost first); load in reverse.
+REVERSED=""
+for m in $STACK; do REVERSED="$m $REVERSED"; done
+
+for m in $REVERSED; do
+    case "$m" in
+        nvidia_drm) mod_load nvidia_drm modeset=1 fbdev=1 ;;
+        *)          mod_load "$m" ;;
+    esac
+done
+
+for m in $(gpu_aux_modules "$HOST_GPU_DRIVER"); do
+    mod_load "$m" || true
+done
+
+# Re-probe every function so the secondary drivers (HDA audio, xHCI, i2c) come
+# back too. Prefer the driver we recorded at teardown time.
+for d in "${GPU_DEVS[@]:-}"; do
+    [ -n "$d" ] || continue
+    [ -d "/sys/bus/pci/devices/$d" ] || continue
+    pci_reprobe "$d"
+done
+
+# If a function is still orphaned, a bus rescan usually picks it up.
+orphans=0
+for d in "${GPU_DEVS[@]:-}"; do
+    [ -n "$d" ] || continue
+    pci_driver_of "$d" >/dev/null 2>&1 || orphans=1
+done
+if [ "$orphans" -ne 0 ]; then
+    vfio_log "some functions still unbound; triggering PCI rescan"
+    echo 1 >/sys/bus/pci/rescan 2>/dev/null || true
+    sleep 1
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Console - only after a framebuffer actually exists
+# ---------------------------------------------------------------------------
+
+sysfb_rebind          # no-op unless start.sh actually unbound something
+
+if wait_for_fb 15; then
+    fbcon_rebind
+else
+    # No fb from the GPU driver and no sysfb to fall back on. Rebinding fbcon
+    # now would oops the kernel and abandon the rest of this script, so skip it.
+    # The display manager below can still bring up a working session via DRM
+    # even with no fbcon; the text console just stays on the dummy driver.
+    vfio_warn "continuing without fbcon; starting the display manager anyway"
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Userspace back up
+# ---------------------------------------------------------------------------
+
+for s in $(detect_gpu_services); do
+    state_has "svc_$s" && { svc_start "$s"; state_drop "svc_$s"; }
+done
+
+DM="$(state_get dm)"
+[ -n "$DM" ] || DM="$(detect_dm || true)"
+if [ -n "$DM" ]; then
+    svc_start "$DM"
+else
+    vfio_warn "no display manager to start"
+fi
+
+# NOTE: no `virsh nodedev-reattach` here. Beyond the re-entrancy problem, it is
+# redundant with managed='yes', and its failure mode is a hook that gets killed
+# halfway through the restore.
+
+state_drop active
+state_drop devices
+state_drop primary
+state_drop gpu_driver
+state_drop dm
+rm -f "$VFIO_STATE_DIR/drivers"
+
+vfio_log "=== release/end complete for '$GUEST' ==="
+exit 0
