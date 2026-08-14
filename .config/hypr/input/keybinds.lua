@@ -59,7 +59,7 @@ local function start_WE()
 end
 
 local function start_QS()
-    os.execute(noctaliaStart .. " &")
+    os.execute(noctaliaBin .. " &")
 end
 
 -- App Control --
@@ -68,7 +68,7 @@ hl.bind(MOD .. " + W", function()
         os.execute("killall -9 linux-wallpaperengine")
         shell_state = 1
     elseif shell_state == 1 then
-        os.execute("killall -9 " .. noctaliaProc)
+        os.execute("killall -9 " .. noctaliaBin)
         shell_state = 2
     else
         start_WE()
@@ -95,6 +95,7 @@ hl.bind(MOD .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(MOD .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(MOD .. " + M", hl.dsp.exec_cmd(mail))
 hl.bind(MOD .. " + O", hl.dsp.exec_cmd(notes))
+hl.bind(MOD .. " + T", hl.dsp.exec_cmd(nocTailscale))
 hl.bind(MOD .. " + ALT + B", hl.dsp.exec_cmd(alternateBrowser))
 hl.bind(MOD .. " + SHIFT + B", hl.dsp.exec_cmd(privateBrowser))
 hl.bind(MOD .. " + Super_L", hl.dsp.exec_cmd(menu))
@@ -120,10 +121,8 @@ hl.bind("PRINT", hl.dsp.exec_cmd(screenshot))
 -- Lockscreen Control --
 hl.bind(MOD .. " + SHIFT + L", hl.dsp.exec_cmd(nocLock))
 
--- v5 only: Alt+Tab style window switcher overlay.
--- if nocWindowSwitcher then
---     hl.bind("ALT + TAB", hl.dsp.exec_cmd(nocWindowSwitcher))
--- end
+-- Window Switching --
+hl.bind("ALT + Tab", hl.dsp.exec_cmd(nocWindowSwitcher))
 
 -- Monitor Control --
 hl.bind("CTRL + F1", function() toggle_brightness(2, {0, 80}) end)
@@ -157,4 +156,4 @@ hl.bind("SUPER + X", function ()
 end)
 
 -- System Control --
---hl.bind(MOD .. " + ESCAPE", hl.dsp.exec_cmd("nwg-bar"))
+hl.bind(MOD .. " + ESCAPE", hl.dsp.exec_cmd(nocSessionMenu))

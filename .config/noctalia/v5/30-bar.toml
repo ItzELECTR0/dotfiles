@@ -67,6 +67,7 @@ center = [ "workspaces" ]
 end = [
     "privacy",
     "network",
+    "davemhammer/tailscale:status",
     "bluetooth",
     "tray",
     "brightness",
@@ -90,7 +91,8 @@ scroll_up = "exec hyprctl dispatch \"hl.dsp.focus({ workspace = 'm-1' })\""
 scroll_down = "exec hyprctl dispatch \"hl.dsp.focus({ workspace = 'm+1' })\""
 
 # ─── Per-monitor overrides ────────────────────────────────────────────────
-# v4 bar.screenOverrides: HDMI-A-1 disabled
-[bar.default.monitor.hdmi]
-match = "HDMI-A-1"
-enabled = false
+# Intentionally none. [bar.default] applies to every output, so new or renamed
+# monitors pick the bar up with no config change. v4 had a screenOverride
+# disabling HDMI-A-1; that was already reverted via the GUI and is not carried
+# over. To special-case an output later, add [bar.default.monitor.<label>]
+# with a `match` field.

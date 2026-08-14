@@ -5,6 +5,9 @@
 # passing the domain XML through on stdin to each script.
 #
 # Differences from the widely-copied upstream dispatcher:
+#   - scripts under qemu.d/_all/ run for EVERY guest, so one copy of the
+#     passthrough logic serves any number of VMs; which of them it actually
+#     acts on is decided by vms.conf, not by the directory name
 #   - no eval, so paths with spaces and shell metacharacters are safe
 #   - each hook runs under a hard timeout so a wedged script cannot block
 #     libvirtd forever
@@ -18,7 +21,15 @@ HOOK_NAME="${2:-}"
 STATE_NAME="${3:-}"
 
 BASEDIR="$(dirname "$(readlink -f "$0")")"
-HOOKPATH="$BASEDIR/qemu.d/$GUEST_NAME/$HOOK_NAME/$STATE_NAME"
+
+# Wind-up hooks run the shared scripts first and the guest's own extras after;
+# wind-down hooks run in the mirror order, so a per-guest script always nests
+# inside the shared handover.
+case "$HOOK_NAME" in
+    release|stopped) HOOKDIRS=("$GUEST_NAME" _all) ;;
+    *)               HOOKDIRS=(_all "$GUEST_NAME") ;;
+esac
+[ "$GUEST_NAME" = "_all" ] && HOOKDIRS=(_all)   # a guest literally named _all
 
 # Buffer stdin once so every hook gets its own copy of the domain XML.
 STDIN="$(cat)"
@@ -43,13 +54,17 @@ run_hook() {
 }
 
 rc=0
-if [ -f "$HOOKPATH" ] && [ -s "$HOOKPATH" ] && [ -x "$HOOKPATH" ]; then
-    run_hook "$HOOKPATH" "${@:4}" || rc=$?
-elif [ -d "$HOOKPATH" ]; then
-    while IFS= read -r file; do
-        [ -n "$file" ] || continue
-        run_hook "$file" "${@:4}" || rc=$?
-    done < <(find -L "$HOOKPATH" -maxdepth 1 -type f -executable -print | sort)
-fi
+for dir in "${HOOKDIRS[@]}"; do
+    [ -n "$dir" ] || continue
+    HOOKPATH="$BASEDIR/qemu.d/$dir/$HOOK_NAME/$STATE_NAME"
+    if [ -f "$HOOKPATH" ] && [ -s "$HOOKPATH" ] && [ -x "$HOOKPATH" ]; then
+        run_hook "$HOOKPATH" "${@:4}" || rc=$?
+    elif [ -d "$HOOKPATH" ]; then
+        while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            run_hook "$file" "${@:4}" || rc=$?
+        done < <(find -L "$HOOKPATH" -maxdepth 1 -type f -executable -print | sort)
+    fi
+done
 
 exit "$rc"

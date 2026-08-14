@@ -5,3 +5,4 @@ urls.json
 .config/**/History.xml
 .config/**/instance.json
 .config/**/telemetry.json
+scripts/vm/

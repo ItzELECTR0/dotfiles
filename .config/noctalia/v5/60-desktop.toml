@@ -10,7 +10,8 @@ sidebar = "compact"
 sidebar_section = "compact"
 width = 700
 hidden_tabs = [ "monitor" ]
-# control_center.show_shortcut_labels is not a setting in this build.
+# v5 only — v4 had no equivalent. Left at the v5 default.
+show_shortcut_labels = true
 
 # v4 calendar.cards + location.showWeekNumberInCalendar
 [control_center.calendar]
@@ -58,9 +59,74 @@ tint_intensity = 0.1
 monitors = [ "DP-1" ]
 wallpaper = ""
 
+# ─── Lockscreen widgets ───────────────────────────────────────────────────
+# Layout produced by the lockscreen widget editor (`noctalia msg
+# lockscreen-widgets-edit`). v4 had no equivalent — this is v5 only.
+# Coordinates are per-output and inherently monitor-specific; the editor
+# rewrites this block, so re-fold it here after moving widgets around.
+[lockscreen_widgets]
+enabled = false
+schema_version = 2
+widget_order = [ "lockscreen-login-box@DP-1", "lockscreen-login-box@HDMI-A-1" ]
+
+[lockscreen_widgets.grid]
+cell_size = 16
+major_interval = 4
+visible = true
+
+[lockscreen_widgets.widget."lockscreen-login-box@DP-1"]
+box_height = 196.0
+box_width = 810.0
+cx = 1280.0
+cy = 1258.0
+output = "DP-1"
+rotation = 0.0
+type = "login_box"
+
+[lockscreen_widgets.widget."lockscreen-login-box@DP-1".settings]
+background_color = "surface_variant"
+background_opacity = 0.88
+background_radius = 12.0
+center_password_text = false
+input_opacity = 1.0
+input_radius = 6.0
+layout = "regular"
+show_caps_lock = true
+show_keyboard_layout = true
+show_login_button = true
+show_media = true
+show_session_buttons = true
+show_unlock_hint = true
+show_weather = true
+
+[lockscreen_widgets.widget."lockscreen-login-box@HDMI-A-1"]
+box_height = 196.0
+box_width = 810.0
+cx = 540.0
+cy = 1738.0
+output = "HDMI-A-1"
+rotation = 0.0
+type = "login_box"
+
+[lockscreen_widgets.widget."lockscreen-login-box@HDMI-A-1".settings]
+background_color = "surface_variant"
+background_opacity = 0.88
+background_radius = 12.0
+center_password_text = false
+input_opacity = 1.0
+input_radius = 6.0
+layout = "regular"
+show_caps_lock = true
+show_keyboard_layout = true
+show_login_button = true
+show_media = true
+show_session_buttons = true
+show_unlock_hint = true
+show_weather = true
+
 # ─── Wallpaper ────────────────────────────────────────────────────────────
 # v4 "wallpaper" — disabled there too, because linux-wallpaperengine draws the
-# desktop instead (see hypr/lua/programs/autostart.lua).
+# desktop instead (see hypr/programs/autostart.lua).
 [wallpaper]
 enabled = false
 directory = "/home/ELECTRO/Pictures/Wallpapers"
@@ -162,17 +228,24 @@ rebooting = []
 shutting_down = []
 
 # ─── Plugins ──────────────────────────────────────────────────────────────
-# v4 plugins.json listed obs-control, privacy-indicator and tailscale. None of
-# them exist for v5: privacy-indicator is now the built-in "privacy" bar
-# widget, and the other two have no counterpart in the official or community
-# catalogs. The list below is the set already enabled in v5.
+# v4 plugins.json listed obs-control, privacy-indicator and tailscale.
+#   privacy-indicator -> now the built-in "privacy" bar widget.
+#   tailscale         -> davemhammer/tailscale (community) covers it; added
+#                        below. Caveat: it has no Taildrop send/receive, so
+#                        v4's file-transfer half is still missing.
+#   obs-control       -> still no counterpart. Nothing in either catalog talks
+#                        to OBS Studio (neyfua/obs-integration is the openSUSE
+#                        Build Service, not OBS). noctalia/screen_recorder is
+#                        the nearest option but records via gpu-screen-recorder
+#                        rather than driving OBS.
 [plugins]
 auto_update = true
 enabled = [
     "noctalia/kaomoji",
     "noctalia/bitwarden",
     "lowcache/claude-companion",
-    "yuuto/calculator"
+    "yuuto/calculator",
+    "davemhammer/tailscale"
 ]
 
 [[plugins.source]]
@@ -186,3 +259,19 @@ name = "community"
 kind = "git"
 location = "https://github.com/noctalia-dev/community-plugins"
 enabled = true
+
+# v4 plugins/tailscale/settings.json. v4's refreshInterval was milliseconds,
+# v5 wants seconds. v4's compactMode / showIpAddress / hideDisconnected /
+# hideMullvadExitNodes / taildrop* / pingCount / defaultPeerAction /
+# terminalCommand have no v5 equivalents.
+[plugin_settings."davemhammer/tailscale"]
+refresh_interval = 5
+ssh_user = "ELECTRO"
+notify_on_peer_change = true
+# Panel placement override, set from the GUI. The plugin's own default is
+# "center" (declared in its plugin.toml).
+manager_position = "auto"
+
+# v4 showPeerCount = false
+[plugin_settings."davemhammer/tailscale:status"]
+show_counts = false

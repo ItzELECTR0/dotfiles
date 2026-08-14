@@ -381,7 +381,6 @@ x-scheme-handler/t3code=t3code.desktop
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 x-scheme-handler/discord-1525055328964837396=discord-1525055328964837396.desktop
 x-scheme-handler/harbor=harbor-handler.desktop
-x-scheme-handler/stremio=harbor-handler.desktop
 text/n3=vscodium-insiders.desktop
 text/scriptlet=vscodium-insiders.desktop
 text/slint=vscodium-insiders.desktop

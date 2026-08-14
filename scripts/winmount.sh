@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# macmount.sh
+# winmount.sh
 #
-# Toggles mount/unmount of mac_hdd_ng.img (OSX-KVM) on the host.
-#   1st run -> loads nbd + apfs modules, connects the image via qemu-nbd,
-#              mounts it with your uid/gid.
+# Toggles mount/unmount of the Windows 11 VM's disk image on the host.
+#   1st run -> loads nbd + ntfs3 modules, connects the image via qemu-nbd,
+#              finds the Windows partition and mounts it with your uid/gid.
 #   2nd run -> unmounts it, disconnects qemu-nbd, unloads the modules.
 #
 # Live mounting: if the VM is running, the image is exported and mounted
@@ -13,34 +13,39 @@
 # force-share=on, otherwise qemu-nbd refuses to open an image another qemu
 # process has locked (same thing `qemu-img -U` does).
 #
-# Usage: macmount.sh [-l|--live] [-u|--umount] [-h|--help]
+# Counterpart to macmount.sh. Defaults to /dev/nbd1 so both can be mounted at
+# the same time.
+#
+# Usage: winmount.sh [-l|--live] [-u|--umount] [-h|--help]
 #   (no args)     toggle mount/unmount
 #   -l, --live    force the read-only live path even if the VM looks shut down
 #   -u, --umount  unmount only, never mount
 #
-# Env overrides: MACMOUNT_IMG, MACMOUNT_DIR, MACMOUNT_NBD, MACMOUNT_PART
+# Env overrides: WINMOUNT_IMG, WINMOUNT_DIR, WINMOUNT_NBD, WINMOUNT_PART,
+#                WINMOUNT_FORCE=1 (mount a dirty volume read-write anyway)
 
 set -uo pipefail
 
-IMG_PATH="${MACMOUNT_IMG:-$HOME/.osx-kvm/mac_hdd_ng.img}"
-IMG_FORMAT="qcow2"
-MOUNT_POINT="${MACMOUNT_DIR:-$HOME/macOS}"
-NBD_DEV="${MACMOUNT_NBD:-/dev/nbd0}"
-PART_DEV="${MACMOUNT_PART:-${NBD_DEV}p2}"
-FS_TYPE="apfs"
-FS_MODULE="apfs"
+IMG_PATH="${WINMOUNT_IMG:-/var/lib/libvirt/images/spark.img}"
+IMG_FORMAT="raw"
+MOUNT_POINT="${WINMOUNT_DIR:-$HOME/Windows}"
+NBD_DEV="${WINMOUNT_NBD:-/dev/nbd1}"
+PART_DEV="${WINMOUNT_PART:-}"   # empty = autodetect the largest NTFS partition
+FS_TYPE="ntfs3"
+FS_MODULE="ntfs3"
 
 FORCE_LIVE=0
 UMOUNT_ONLY=0
 
 usage() {
     cat <<'EOF'
-Usage: macmount.sh [-l|--live] [-u|--umount] [-h|--help]
+Usage: winmount.sh [-l|--live] [-u|--umount] [-h|--help]
   (no args)     toggle mount/unmount
   -l, --live    force the read-only live path even if the VM looks shut down
   -u, --umount  unmount only, never mount
 
-Env overrides: MACMOUNT_IMG, MACMOUNT_DIR, MACMOUNT_NBD, MACMOUNT_PART
+Env overrides: WINMOUNT_IMG, WINMOUNT_DIR, WINMOUNT_NBD, WINMOUNT_PART,
+               WINMOUNT_FORCE=1 (mount a dirty volume read-write anyway)
 EOF
 }
 
@@ -80,7 +85,7 @@ dev_size() {
     cat "/sys/class/block/${1##*/}/size" 2>/dev/null || echo 0
 }
 
-# Don't rmmod nbd out from under a sibling script (winmount.sh) holding another
+# Don't rmmod nbd out from under a sibling script (macmount.sh) holding another
 # device.
 nbd_others_connected() {
     local me="${1##*/}" name d
@@ -106,6 +111,28 @@ wait_for_dev() {
     return 1
 }
 
+# A Windows 11 GPT disk has several partitions (EFI, MSR, Windows, Recovery)
+# and both Windows and Recovery are NTFS, so pick the biggest NTFS one.
+# blkid -p probes the device directly instead of trusting the udev cache,
+# which matters for a device that appeared a second ago.
+find_windows_partition() {
+    local dev name size type best="" best_size=0
+    for dev in "$NBD_DEV"p*; do
+        [ -b "$dev" ] || continue
+        name="${dev##*/}"
+        size="$(dev_size "$name")"
+        [ "$size" -gt 0 ] || continue
+        type="$(doas blkid -p -s TYPE -o value "$dev" 2>/dev/null)"
+        [ "$type" = "ntfs" ] || continue
+        if [ "$size" -gt "$best_size" ]; then
+            best="$dev"
+            best_size="$size"
+        fi
+    done
+    [ -n "$best" ] || return 1
+    printf '%s\n' "$best"
+}
+
 # --- unmount ---------------------------------------------------------------
 
 if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
@@ -126,7 +153,7 @@ if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
     if fs_still_mounted "$FS_TYPE"; then
         echo "    (another $FS_TYPE mount is live, leaving $FS_MODULE loaded)"
     else
-        doas rmmod "$FS_MODULE" 2>/dev/null || echo "    ($FS_MODULE module busy or already unloaded)"
+        doas rmmod "$FS_MODULE" 2>/dev/null || echo "    ($FS_MODULE module busy, built in, or already unloaded)"
     fi
     if nbd_others_connected "$NBD_DEV"; then
         echo "    (another nbd device is connected, leaving nbd loaded)"
@@ -156,7 +183,7 @@ fi
 if [ "$(dev_size "$NBD_DEV")" -gt 0 ]; then
     echo "==> $NBD_DEV is already connected to something." >&2
     echo "    Disconnect it first (doas qemu-nbd --disconnect $NBD_DEV) or set" >&2
-    echo "    MACMOUNT_NBD to a free device." >&2
+    echo "    WINMOUNT_NBD to a free device." >&2
     exit 1
 fi
 
@@ -201,12 +228,35 @@ if ! doas "${CONNECT[@]}"; then
     exit 1
 fi
 
-# Wait for the kernel to register the partition device before mounting.
-# The kernel scans the partition table right after the capacity change,
-# but nbd0p2 can take a moment longer to show up than nbd0 itself.
-echo "==> Waiting for $PART_DEV to appear..."
-if ! wait_for_dev "$PART_DEV"; then
-    echo "    $PART_DEV never appeared -- connection didn't come up cleanly."
+# Wait for the kernel to register the partition devices before probing them.
+# The kernel scans the partition table right after the capacity change, but the
+# partition nodes can take a moment longer to show up than nbd1 itself.
+echo "==> Waiting for partitions on $NBD_DEV..."
+if ! wait_for_dev "${NBD_DEV}p1"; then
+    echo "    No partitions appeared -- connection didn't come up cleanly."
+    doas qemu-nbd --disconnect "$NBD_DEV"
+    exit 1
+fi
+
+if [ -z "$PART_DEV" ]; then
+    echo "==> Looking for the Windows partition..."
+    # p1 showing up doesn't mean the whole table has been added yet, so give the
+    # later partitions a few tries to appear before giving up.
+    for _ in $(seq 1 10); do
+        PART_DEV="$(find_windows_partition)"
+        [ -n "$PART_DEV" ] && break
+        sleep 0.5
+    done
+    if [ -z "$PART_DEV" ]; then
+        echo "    No NTFS partition found on $NBD_DEV. Partition table:"
+        doas lsblk -o NAME,SIZE,FSTYPE,LABEL "$NBD_DEV" 2>&1 | sed 's/^/    /'
+        echo "    Set WINMOUNT_PART to pick one by hand."
+        doas qemu-nbd --disconnect "$NBD_DEV"
+        exit 1
+    fi
+    echo "    Picked $PART_DEV ($(( $(dev_size "$PART_DEV") / 2097152 )) GiB)"
+elif ! wait_for_dev "$PART_DEV"; then
+    echo "    $PART_DEV never appeared."
     doas qemu-nbd --disconnect "$NBD_DEV"
     exit 1
 fi
@@ -214,17 +264,29 @@ fi
 echo "==> Creating $MOUNT_POINT..."
 mkdir -p "$MOUNT_POINT"
 
-# The apfs driver is read-only unless you opt in with the experimental
-# 'readwrite' flag; plain 'ro' pins it read-only.
+# ntfs3 refuses a read-write mount of a volume marked dirty, which is what you
+# get from hibernation or Windows' Fast Startup. 'force' overrides that; it's
+# safe alongside 'ro' because nothing gets written, but read-write on a dirty
+# volume can lose data, so that needs WINMOUNT_FORCE=1 set deliberately.
+NTFS_OPTS="uid=$(id -u),gid=$(id -g),umask=022,windows_names"
 if [ "$READ_ONLY" -eq 1 ]; then
-    MOUNT_OPTS="ro,uid=$(id -u),gid=$(id -g)"
+    MOUNT_OPTS="ro,force,$NTFS_OPTS"
+elif [ "${WINMOUNT_FORCE:-0}" = "1" ]; then
+    MOUNT_OPTS="rw,force,$NTFS_OPTS"
 else
-    MOUNT_OPTS="readwrite,uid=$(id -u),gid=$(id -g)"
+    MOUNT_OPTS="rw,$NTFS_OPTS"
 fi
 
 echo "==> Mounting $PART_DEV at $MOUNT_POINT ($MOUNT_OPTS)..."
 if ! doas mount -t "$FS_TYPE" "$PART_DEV" "$MOUNT_POINT" -o "$MOUNT_OPTS"; then
-    echo "    Mount failed. Cleaning up nbd connection..."
+    echo "    Mount failed."
+    if [ "$READ_ONLY" -eq 0 ]; then
+        echo "    If it says the volume is dirty, Windows was hibernated or shut"
+        echo "    down with Fast Startup. Boot it and run 'shutdown /s /t 0', or"
+        echo "    disable Fast Startup. To mount it anyway (risks losing whatever"
+        echo "    Windows had in flight): WINMOUNT_FORCE=1 $0"
+    fi
+    echo "    Cleaning up nbd connection..."
     doas qemu-nbd --disconnect "$NBD_DEV"
     rmdir "$MOUNT_POINT" 2>/dev/null
     exit 1

@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
-# vfio-recover - put the host GPU and desktop back by hand.
+# vfio-recover - emergency recovery. Forces the GPU and the desktop back.
 #
-# For when the VM died in a way that skipped release/end, or a hook was killed
-# partway through. Safe to run over SSH from a headless box, and safe to run
-# twice. Same code path as the release/end hook.
+# For when the screen is dead and the normal path did not run: the VM died
+# without release/end, a hook was killed partway through, or a start aborted and
+# left QEMU sitting on the card. Meant to be run over SSH from another machine.
 #
-#   doas vfio-recover
+# DESTRUCTIVE BY DESIGN. Any VM holding the passed-through GPU is DESTROYED -
+# powered off, not shut down. Unsaved guest state is lost. That is the whole
+# point: while QEMU still has the vfio group open, every fd on /dev/vfio/<group>
+# keeps the host driver from binding, so the host GPU cannot come back and the
+# screen stays dark no matter what else is done. Anything gentler is what the
+# release/end hook is for.
+#
+#   doas vfio-recover              force everything (default)
+#   doas vfio-recover --keep-vm    leave running VMs alone
+#   doas vfio-recover --no-reset   skip the PCI function reset
+#   doas vfio-recover --dry-run    report only, change nothing
 
 set -uo pipefail
 
@@ -14,28 +24,207 @@ set -uo pipefail
 VFIO_TAG=vfio-recover
 . /etc/libvirt/hooks/vfio-lib.sh
 
-# The revert hook no-ops without a teardown marker. When recovering by hand the
-# marker may be gone (or never written), so synthesise one.
-state_has active || state_set active manual
+KILL_VM=1
+DO_RESET=1
+DRY=0
+GUEST_ARG=""
+STOPPED_SVCS=""
 
-if [ -z "$(state_get devices)" ]; then
-    mapfile -t found < <(
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --keep-vm)  KILL_VM=0 ;;
+        --no-reset) DO_RESET=0 ;;
+        --dry-run)  DRY=1 ;;
+        -h|--help)  sed -n '2,25p' "$0"; exit 0 ;;
+        -*)         echo "unknown option: $1" >&2; exit 2 ;;
+        *)          GUEST_ARG="$1" ;;
+    esac
+    shift
+done
+
+act() {
+    if [ "$DRY" = 1 ]; then vfio_log "DRY-RUN: would $*"; return 0; fi
+    "$@"
+}
+
+vfio_log "=== emergency recovery starting (kill-vm=$KILL_VM reset=$DO_RESET dry-run=$DRY) ==="
+
+# ---------------------------------------------------------------------------
+# 1. Which functions are we recovering
+# ---------------------------------------------------------------------------
+
+read -r -a DEVS <<<"$(state_get devices)"
+
+if [ "${#DEVS[@]}" -eq 0 ]; then
+    mapfile -t DEVS < <(
         for l in /sys/bus/pci/drivers/vfio-pci/0000:*; do
             [ -e "$l" ] && basename "$l"
         done
     )
-    if [ "${#found[@]}" -gt 0 ]; then
-        state_set devices "${found[*]}"
-        vfio_log "detected devices on vfio-pci: ${found[*]}"
-    else
-        vfio_log "nothing bound to vfio-pci; will still reload the GPU driver and restart the display manager"
-    fi
+    [ "${#DEVS[@]}" -gt 0 ] && vfio_log "detected on vfio-pci: ${DEVS[*]}"
 fi
 
+if [ "${#DEVS[@]}" -eq 0 ]; then
+    vfio_log "nothing on vfio-pci; will still reload the GPU driver and restart the display manager"
+fi
+
+# IOMMU groups behind those functions - these are the fds QEMU actually holds.
+GROUPS=""
+for d in "${DEVS[@]:-}"; do
+    [ -n "$d" ] || continue
+    g="$(iommu_group_of "$d" 2>/dev/null)" || continue
+    case " $GROUPS " in *" $g "*) continue ;; esac
+    GROUPS="$GROUPS $g"
+done
+[ -n "$GROUPS" ] && vfio_log "iommu groups:$GROUPS"
+
+# ---------------------------------------------------------------------------
+# 2. Kill whatever is holding the card
+# ---------------------------------------------------------------------------
+
+vfio_group_holders() {
+    local out="" g pids p
+    for g in $GROUPS; do
+        [ -e "/dev/vfio/$g" ] || continue
+        pids="$(proc_fd_holders "/dev/vfio/$g")"
+        for p in $pids; do
+            case " $out " in *" $p "*) continue ;; esac
+            out="$out $p"
+        done
+    done
+    # /dev/vfio/vfio is the container fd; a QEMU may hold only that one.
+    for p in $(proc_fd_holders /dev/vfio/vfio); do
+        case " $out " in *" $p "*) continue ;; esac
+        out="$out $p"
+    done
+    printf '%s\n' "$out"
+}
+
+_vfio_groups_free() { [ -z "$(vfio_group_holders)" ]; }
+
+pid_name() { tr -d '\0' <"/proc/$1/comm" 2>/dev/null; }
+
+if [ "$KILL_VM" = 1 ]; then
+    SAFE="$(protected_pids)"
+    vfio_log "protected pids:$SAFE"
+
+    # 2a. Ask libvirt first. It gets a short leash: if libvirtd is itself wedged
+    # inside a hook, virsh will block, and waiting on it is the failure this
+    # script exists to break out of.
+    if command -v virsh >/dev/null 2>&1; then
+        DOMS="$(timeout 5 virsh -c qemu:///system list --name 2>/dev/null | sed '/^$/d')"
+        if [ -z "$DOMS" ] && [ -n "$GUEST_ARG" ]; then
+            DOMS="$GUEST_ARG"
+        fi
+        for dom in $DOMS; do
+            vfio_log "destroying domain '$dom' via libvirt"
+            act timeout 10 virsh -c qemu:///system destroy "$dom" >/dev/null 2>&1 \
+                || vfio_warn "virsh destroy '$dom' did not complete in time; falling through to SIGKILL"
+        done
+    else
+        vfio_log "virsh not available; going straight to signals"
+    fi
+
+    # 2b. Signal anything still holding a vfio fd, libvirt or not.
+    for phase in TERM KILL; do
+        holders=""
+        for p in $(vfio_group_holders); do
+            case " $SAFE " in *" $p "*) continue ;; esac
+            holders="$holders $p"
+        done
+        [ -n "$holders" ] || break
+        for p in $holders; do
+            vfio_log "SIG$phase $p ($(pid_name "$p"))"
+        done
+        # shellcheck disable=SC2086
+        act kill -"$phase" $holders 2>/dev/null
+        [ "$DRY" = 1 ] && break
+        # Wait for the fds to actually close; a killed QEMU takes a moment to
+        # tear down its memory mappings, and rebinding before that fails.
+        vfio_wait 10000 _vfio_groups_free
+    done
+
+    # 2c. A hook killed mid-run leaves the machine in exactly the state we are
+    # fixing. Kill stragglers so they cannot race us on the console.
+    for p in $(pgrep -f '/etc/libvirt/hooks/' 2>/dev/null); do
+        case " $SAFE " in *" $p "*) continue ;; esac
+        vfio_log "killing stale hook process $p ($(pid_name "$p"))"
+        act kill -KILL "$p" 2>/dev/null
+    done
+
+    LEFT="$(vfio_group_holders)"
+    if [ -n "$LEFT" ] && [ "$DRY" = 0 ]; then
+        # Unkillable holder means the process is stuck in the kernel (D state)
+        # on a device the driver will not release. Dropping libvirt's daemons
+        # is the last thing that can free it without a reboot.
+        vfio_warn "still held after SIGKILL:$LEFT - stopping libvirt daemons"
+        for s in virtqemud libvirtd; do
+            svc_active "$s" && { svc_stop "$s"; STOPPED_SVCS="$STOPPED_SVCS $s"; }
+        done
+        vfio_wait 5000 _vfio_groups_free
+        LEFT="$(vfio_group_holders)"
+        [ -n "$LEFT" ] && vfio_warn "vfio group still held by:$LEFT - a reboot may be unavoidable"
+    fi
+else
+    vfio_log "--keep-vm given; leaving running VMs alone"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Take the functions off vfio-pci and reset them
+# ---------------------------------------------------------------------------
+# revert.sh unbinds too, but it will not reset. Doing it here, while everything
+# is guaranteed unbound, is what stops a hard-killed QEMU from handing the host
+# driver a wedged card.
+
+if [ "$DO_RESET" = 1 ] && [ "${#DEVS[@]}" -gt 0 ]; then
+    for d in "${DEVS[@]:-}"; do
+        [ -n "$d" ] || continue
+        [ -d "/sys/bus/pci/devices/$d" ] || continue
+        [ "$(pci_driver_of "$d" 2>/dev/null || true)" = "vfio-pci" ] && act pci_unbind "$d"
+        act pci_clear_override "$d"
+    done
+    for d in "${DEVS[@]:-}"; do
+        [ -n "$d" ] || continue
+        [ -d "/sys/bus/pci/devices/$d" ] || continue
+        act pci_reset "$d" || true
+    done
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Hand off to the normal restore path
+# ---------------------------------------------------------------------------
+
+if [ "$DRY" = 1 ]; then
+    vfio_log "DRY-RUN: would run release/end revert now"
+    vfio_log "=== dry run complete, nothing changed ==="
+    exit 0
+fi
+
+# revert.sh no-ops without a teardown marker. Recovering by hand, the marker may
+# be gone or was never written, so synthesise one.
+state_has active || state_set active "${GUEST_ARG:-manual-recovery}"
+[ "${#DEVS[@]}" -gt 0 ] && [ -z "$(state_get devices)" ] && state_set devices "${DEVS[*]}"
+
 REVERT=""
-for f in /etc/libvirt/hooks/qemu.d/*/release/end/revert.sh; do
+for f in /etc/libvirt/hooks/qemu.d/_all/release/end/revert.sh \
+         /etc/libvirt/hooks/qemu.d/*/release/end/revert.sh; do
     [ -x "$f" ] && { REVERT="$f"; break; }
 done
-[ -n "$REVERT" ] || { echo "no revert.sh found under /etc/libvirt/hooks/qemu.d" >&2; exit 1; }
+[ -n "$REVERT" ] || { vfio_log "FATAL: no revert.sh under /etc/libvirt/hooks/qemu.d"; exit 1; }
 
-exec "$REVERT" "${1:-manual-recovery}" release end </dev/null
+# Forced, because recovery runs with whatever name the user typed: it is
+# neither guaranteed to be in vms.conf nor to match the domain named in the
+# teardown marker, and both of those checks exist to stop one VM's hooks
+# disturbing another's GPU - not to stop the human at the keyboard.
+vfio_log "handing off to $REVERT"
+VFIO_FORCE_REVERT=1 "$REVERT" "${GUEST_ARG:-manual-recovery}" release end </dev/null
+rc=$?
+
+# If we had to drop libvirt to free the card, put it back now that the host GPU
+# is restored - otherwise the next VM start fails for a reason unrelated to this.
+for s in $STOPPED_SVCS; do
+    svc_start "$s"
+done
+
+vfio_log "=== emergency recovery finished (revert rc=$rc) ==="
+exit "$rc"

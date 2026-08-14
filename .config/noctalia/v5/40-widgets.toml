@@ -53,12 +53,17 @@ font_weight = 700
 
 # v4 plugin:privacy-indicator — this is a built-in widget in v5.
 # (activeColor "primary", inactiveColor "none" -> v5 default "outline")
+# Values come from plugins/privacy-indicator/settings.json (the live settings),
+# NOT the manifest's defaultSettings.
 [widget.privacy]
 type = "privacy"
-hide_inactive = false
-icon_spacing = 4
+# v4 hideInactive = true — only show an icon while that device is in use.
+hide_inactive = true
+# v4 iconSpacing = 2
+icon_spacing = 2
 active_color = "primary"
 inactive_color = "outline"
+# v4 removeMargins = true has no v5 equivalent.
 
 [widget.network]
 type = "network"
@@ -109,7 +114,8 @@ middle = "exec pwvucontrol || pavucontrol"
 
 [widget.keyboard_layout]
 type = "keyboard_layout"
-show_icon = true
+# renamed from show_icon in v5.0.0
+show_glyph = true
 show_label = false
 display = "short"
 hide_when_single_layout = false
@@ -132,8 +138,12 @@ type = "session"
 glyph = "shutdown"
 icon_color = "primary"
 
+# ─── Plugin widgets ───────────────────────────────────────────────────────
+# v4 plugin:tailscale (bar end) is now davemhammer/tailscale:status, placed in
+# the bar's "end" list in 30-bar.toml. Its settings live in 60-desktop.toml.
+
 # ─── Not migrated ─────────────────────────────────────────────────────────
-# v4 had two plugin widgets with no v5 counterpart yet:
-#   plugin:obs-control (bar center)  — closest v5 option is the official
-#                                      noctalia/screen_recorder plugin
-#   plugin:tailscale   (bar end)     — no v5 plugin exists
+# v4 plugin:obs-control (bar center) still has no v5 counterpart — neither
+# catalog has an OBS Studio plugin. The nearest official option is
+# noctalia/screen_recorder, but it drives gpu-screen-recorder directly instead
+# of controlling OBS, so recording/replay/stream state would not carry over.

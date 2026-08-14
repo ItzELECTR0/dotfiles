@@ -21,11 +21,19 @@ windowShadowFgFallback: #080808; // Fallback for shadow
 historyOutIconFg: #ff8c21;
 historyIconFgInverted: #e8e8e8;
 
-msgServiceBg: #6e3500;
+msgServiceBg: #1f1f1f;
+msgServiceBgSelected: #381b14;
 msgServiceFg: #e8e8e8;
-msgOutBg: #6e3500;
-msgOutBgSelected : #23858c;
+historyUnreadBarBg: #1f1f1f; // Unread messages banner background
+historyUnreadBarFg: #e8e8e8; // Unread messages banner text
+historyUnreadBarBorder: #08080800; // Unread messages banner border
+botKbBg: #1f1f1f; // Inline bot keyboard button background
+botKbDownBg: #381b14; // Inline bot keyboard button pressed
+msgBotKbIconFg: #707880; // Inline bot keyboard button icon
+msgOutBg: #381b14;
+msgOutBgSelected: #292929;
 msgOutServiceFg: #e8e8e8;
+historyTextOutFg: #e8e8e8; // Outgoing bubble text
 msgOutDateFg: #e8e8e8;
 historySentIconFg: #e8e8e8;
 msgOutDateFgSelected: #e8e8e8;
@@ -50,7 +58,22 @@ activeButtonFgOver: #ffe5cc; // Active button hover text
 activeButtonSecondaryFg: #0f0f0f; // Active button secondary text
 activeButtonSecondaryFgOver: #ffe5cc; // Active button secondary hover text
 activeLineFg: #e8e8e8;
-dialogsBgActive: #ff8c21;
+dialogsBgActive: #381b14;
+dialogsNameFg: #e8e8e8; // Chat list name text
+dialogsNameFgActive: #e8e8e8; // Selected chat name text (same as bubble text)
+dialogsTextFgActive: #e8e8e8; // Selected chat preview text (same as bubble text)
+dialogsDateFgActive: #e8e8e8; // Selected chat date text (same as bubble text)
+sideBarBg: #161616; // Filters side bar background
+sideBarBgActive: #1f1f1f; // Filters side bar active background
+sideBarBgRipple: #191919; // Filters side bar ripple effect
+sideBarTextFg: #5e6367; // Filters side bar text
+sideBarTextFgActive: #ff8c21; // Filters side bar active item text
+sideBarIconFg: #5e6367; // Filters side bar icon
+sideBarIconFgActive: #ff8c21; // Filters side bar active item icon
+sideBarBadgeBg: #ff8c21; // Filters side bar badge background
+sideBarBadgeBgMuted: #5e6367; // Filters side bar muted badge background
+sideBarBadgeFg: #0f0f0f; // Filters side bar badge text
+
 
 lightButtonBg: #141414; // Light button background
 lightButtonBgOver: #1f1f1f; // Light button hover background
@@ -81,6 +104,10 @@ scrollBarBg: #ff8c2140; // Scroll bar background (40% opacity)
 scrollBarBgOver: #ff8c2160; // Scroll bar hover background (60% opacity)
 scrollBg: #1f1f1f40; // Scroll bar track (40% opacity)
 scrollBgOver: #1f1f1f60; // Scroll bar track on hover (60% opacity)
+historyScrollBarBg: #e8e8e87a; // Chat scroll bar (48% opacity)
+historyScrollBarBgOver: #e8e8e8bc; // Chat scroll bar on hover (74% opacity)
+historyScrollBg: #e8e8e84c; // Chat scroll bar track (30% opacity)
+historyScrollBgOver: #e8e8e86b; // Chat scroll bar track on hover (42% opacity)
 
 smallCloseIconFg: #5e6367;
 smallCloseIconFgOver: #707880;

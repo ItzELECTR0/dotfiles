@@ -1,34 +1,17 @@
-noctaliaVersion = "v5"
-
-if noctaliaVersion == "v4" then
-    noctalia          = "qs -c noctalia-shell ipc call"
-    noctaliaStart     = "qs -c noctalia-shell"
-    noctaliaProc      = "qs"
-    nocLauncher       = noctalia .. " launcher toggle"
-    nocControlCenter  = noctalia .. " controlCenter toggle"
-    nocSettings       = noctalia .. " settings toggle"
-    nocVolumeUp       = noctalia .. " volume increase"
-    nocVolumeDown     = noctalia .. " volume decrease"
-    nocVolumeMute     = noctalia .. " volume muteOutput"
-    nocBrightnessUp   = noctalia .. " brightness increase"
-    nocBrightnessDown = noctalia .. " brightness decrease"
-    nocLock           = noctalia .. " lockScreen lock"
-    nocWindowSwitcher = nil -- v4 has no window switcher
-else
-    noctalia          = "noctalia msg"
-    noctaliaStart     = "noctalia"
-    noctaliaProc      = "noctalia"
-    nocLauncher       = noctalia .. " panel-toggle launcher"
-    nocControlCenter  = noctalia .. " panel-toggle control-center"
-    nocSettings       = noctalia .. " settings-toggle"
-    nocVolumeUp       = noctalia .. " volume-up 5"
-    nocVolumeDown     = noctalia .. " volume-down 5"
-    nocVolumeMute     = noctalia .. " volume-mute"
-    nocBrightnessUp   = noctalia .. " brightness-up 5"
-    nocBrightnessDown = noctalia .. " brightness-down 5"
-    nocLock           = noctalia .. " session lock"
-    nocWindowSwitcher = noctalia .. " window-switcher"
-end
+noctaliaBin       = "noctalia"
+noctalia          = noctaliaBin .. " msg"
+nocLauncher       = noctalia .. " panel-toggle launcher"
+nocControlCenter  = noctalia .. " panel-toggle control-center"
+nocSessionMenu    = noctalia .. " panel-toggle session"
+nocSettings       = noctalia .. " settings-toggle"
+nocVolumeUp       = noctalia .. " volume-up 5"
+nocVolumeDown     = noctalia .. " volume-down 5"
+nocVolumeMute     = noctalia .. " volume-mute"
+nocBrightnessUp   = noctalia .. " brightness-up 5"
+nocBrightnessDown = noctalia .. " brightness-down 5"
+nocLock           = noctalia .. " session lock"
+nocWindowSwitcher = noctalia .. " window-switcher"
+nocTailscale      = noctalia .. " panel-toggle davemhammer/tailscale:manager"
 
 function discord()
     local variants = {

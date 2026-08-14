@@ -17,49 +17,49 @@ dirs = {
 --ANIMATIONS--
 --------------
 
-require("lua/animations/animation")
+require("animations/animation")
 
 -----------
 --DISPLAY--
 -----------
 
-require("lua/display/monitors")
-require("lua/display/rules")
+require("display/monitors")
+require("display/rules")
 
 ------------
 --PROGRAMS--
 ------------
 
-require("lua/programs/autostart")
-require("lua/programs/programs")
+require("programs/autostart")
+require("programs/programs")
 
 -------------
 --VARIABLES--
 -------------
 
-require("lua/variables/environment")
-require("lua/variables/misc")
-require("lua/variables/permissions")
+require("variables/environment")
+require("variables/misc")
+require("variables/permissions")
 
 ---------
 --THEME--
 ---------
 
-require("lua/theme/border")
-require("lua/theme/theme")
+require("theme/border")
+require("theme/theme")
 
 ---------
 --INPUT--
 ---------
 
-require("lua/input/input")
-require("lua/input/keybinds")
+require("input/input")
+require("input/keybinds")
 
 -----------
 --PLUGINS--
 -----------
 
---require("lua/plugins/dynamic-cursors")
+--require("plugins/dynamic-cursors")
 
 -----------
 --HYPRMOD--

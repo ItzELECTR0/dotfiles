@@ -32,11 +32,11 @@ clipboard_auto_paste = "off"
 enabled = true
 speed = 1.0
 
-# v4 general.enableShadows = true, general.shadowDirection = "bottom_right"
-# (v5 has no diagonal directions; "down" is the closest single-axis match.
-#  v4 shadowOffsetX/Y are not exposed in v5.)
+# v4 general.enableShadows = true, general.shadowDirection = "bottom_right".
+# v5 has the same diagonals, renamed: bottom_right -> down_right.
+# (v4 shadowOffsetX/Y are still not exposed in v5.)
 [shell.shadow]
-direction = "down"
+direction = "down_right"
 alpha = 0.55
 
 [shell.panel]
@@ -58,8 +58,8 @@ session_position = "top_center"
 # v4 wallpaper.panelPosition = "follow_bar"
 wallpaper_position = "auto"
 # v4 appLauncher.overviewLayer = true -> floating panels on the overlay layer.
-# Not a setting in this build (shell.panel.floating_layer landed later);
-# overlay is the built-in default anyway.
+floating_layer = "overlay"
+floating_offset = 8
 # v4 ui.panelBackgroundOpacity = 0.4 — v5 replaced the numeric opacity with
 # three presets; "glass" is the most transparent.
 transparency_mode = "glass"
@@ -102,6 +102,22 @@ blacklist = []
 [shell.screen_corners]
 enabled = false
 size = 32
+
+# ─── Privacy indicator filters ────────────────────────────────────────────
+# v4 privacy-indicator micFilterRegex = "gsr". A node whose app name matches
+# is IGNORED (same semantics in v5). gpu-screen-recorder registers its capture
+# streams as application.name "gsr-<device>" — with gsr-ui's replay buffer
+# running that is two permanent Stream/Input/Audio nodes (mic + desktop-audio
+# monitor), so without this the mic indicator would sit lit forever.
+# Anchored to "^gsr-" so it cannot catch an unrelated app with gsr in its name.
+[shell.privacy]
+mic_filter_regex = "^gsr-"
+# v4 camFilterRegex = "" (empty). gsr does not register a camera node.
+cam_filter_regex = ""
+# v5 only — v4 had no screen filter. Left empty: gsr captures the screen via
+# KMS/NVFBC rather than a PipeWire video stream, so it never shows up here.
+# Set to "^gsr" if a future gsr build starts publishing a screen-share node.
+screen_filter_regex = ""
 
 [hot_corners]
 enabled = false
@@ -175,7 +191,7 @@ high_contrast = false
 ui_scale = 1.16
 
 # ─── Shell keybinds ───────────────────────────────────────────────────────
-# v4 general.keybinds. v4's "keyRemove" (Del) has no v5 action.
+# v4 general.keybinds. v4's "keyRemove" (Del) is v5's "delete".
 [keybinds]
 validate = [ "Return", "KP_Enter" ]
 cancel = [ "Escape" ]
@@ -183,3 +199,10 @@ left = [ "Left" ]
 right = [ "Right" ]
 up = [ "Up" ]
 down = [ "Down" ]
+delete = [ "Delete" ]
+# v5 only — no v4 counterpart. Listed at their defaults so every bind the
+# shell reacts to is visible in one place.
+copy = [ "Ctrl+c" ]
+save = [ "Ctrl+s" ]
+tab_next = [ "Tab" ]
+tab_previous = [ "Shift+ISO_Left_Tab" ]

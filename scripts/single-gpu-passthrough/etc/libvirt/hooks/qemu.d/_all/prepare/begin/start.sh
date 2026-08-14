@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# prepare/begin - release the GPU from the host so libvirt can hand it to the guest.
+# _all/prepare/begin - release the GPU from the host so libvirt can hand it to
+# the guest.
+#
+# Lives under qemu.d/_all/ so it runs for every domain; vms.conf decides which
+# domains it actually acts on. Anything not listed there returns immediately
+# without touching the host.
 #
 # Ordering rule that everything below follows:
 #   validate -> stop userspace -> release console -> unload GPU driver -> load vfio
 # Nothing destructive happens until the preflight has passed, so a broken domain
 # definition can no longer black out the desktop.
+#
+# Second rule: never sleep for a fixed duration. Work that does not touch the
+# GPU is started in the background so it overlaps the display manager teardown,
+# and every wait polls the condition it cares about so the next step fires the
+# moment the previous one is genuinely done.
 
 set -uo pipefail
 
@@ -13,9 +23,29 @@ VFIO_TAG=vfio-start
 
 GUEST="${1:-unknown}"
 XML="$(cat)"          # libvirt feeds the full domain XML on stdin
+
+# ---------------------------------------------------------------------------
+# 0. Is this one of ours?
+# ---------------------------------------------------------------------------
+
+if ! vfio_guest_listed "$GUEST"; then
+    vfio_log "domain '$GUEST' is not in the passthrough list; leaving the host alone"
+    exit 0
+fi
+
+T0="$(vfio_now_ms)"
+vfio_log "=== prepare/begin for domain '$GUEST' ==="
+
 [ -n "$XML" ] || vfio_warn "empty domain XML on stdin; falling back to kvm.conf/autodetect"
 
-vfio_log "=== prepare/begin for domain '$GUEST' ==="
+# One GPU, one guest. If another domain already owns it, this start must fail
+# here - before the marker is claimed - so that this domain's release/end sees
+# an owner that is not itself and leaves the running guest's GPU alone.
+OWNER="$(state_get active)"
+if [ -n "$OWNER" ] && [ "$OWNER" != "$GUEST" ]; then
+    vfio_die "the GPU is already handed over to domain '$OWNER'; refusing to start '$GUEST' on top of it"
+fi
+[ -n "$OWNER" ] && vfio_warn "stale teardown marker for '$OWNER' (previous release/end did not finish); re-running the handover"
 
 # ---------------------------------------------------------------------------
 # 1. Work out which PCI functions are being handed over
@@ -102,7 +132,7 @@ svc_active sshd || svc_active ssh || svc_active sshd.socket \
 if [ "$preflight_fail" -ne 0 ]; then
     vfio_die "preflight failed; refusing to tear down the display. Nothing was changed."
 fi
-vfio_log "preflight OK"
+vfio_log "preflight OK ($(( $(vfio_now_ms) - T0 ))ms)"
 
 # Only now do we own the teardown; revert.sh keys off this marker.
 state_set active "$GUEST"
@@ -118,10 +148,24 @@ done
 vfio_log "recorded host drivers:$(sed 's/^/ /' "$VFIO_STATE_DIR/drivers" | tr '\n' ',')"
 
 # ---------------------------------------------------------------------------
-# 3. Stop userspace holding the GPU
+# 3. Background the work that does not touch the GPU
+# ---------------------------------------------------------------------------
+# vfio-pci can be resident while the host driver still owns the card; the driver
+# core will not move a bound device. Loading it now, alongside the display
+# manager teardown, takes the modprobe off the critical path between "GPU is
+# free" and "libvirt may bind it". Collected before the hook returns.
+{ mod_load vfio && mod_load vfio_iommu_type1 && mod_load vfio_pci; } & VFIOMOD_PID=$!
+
+# ---------------------------------------------------------------------------
+# 4. Stop userspace holding the GPU
 # ---------------------------------------------------------------------------
 
 DM="$(detect_dm || true)"
+GPU_SVCS="$(detect_gpu_services)"
+
+for s in $GPU_SVCS; do state_set "svc_$s" 1; done
+{ for s in $GPU_SVCS; do svc_stop "$s"; done; } & SVC_PID=$!
+
 if [ -n "$DM" ]; then
     state_set dm "$DM"
     svc_stop "$DM"
@@ -129,32 +173,42 @@ else
     vfio_warn "no display manager detected - assuming a bare TTY session"
 fi
 
-for s in $(detect_gpu_services); do
-    state_set "svc_$s" 1
-    svc_stop "$s"
-done
-
-# Give logind/the compositor a moment to actually exit before counting refs.
-sleep 2
-kill_gpu_holders
+# Both of these hold /dev/nvidia*, so the module unload below cannot start until
+# they are actually gone.
+wait "$SVC_PID" 2>/dev/null
 
 # ---------------------------------------------------------------------------
-# 4. Release the console
+# 5. Release the console
 # ---------------------------------------------------------------------------
 
 fbcon_unbind
 sysfb_unbind
 
 # ---------------------------------------------------------------------------
-# 5. Unload the host GPU driver stack
+# 6. Unload the host GPU driver stack
 # ---------------------------------------------------------------------------
+# A failing modprobe -r returns immediately, so retrying it IS the readiness
+# check for "has userspace let go of the card yet" - no fixed grace period, and
+# no eviction pass at all in the normal case where the session exited cleanly.
+
+STACK="$(gpu_module_stack "${HOST_GPU_DRIVER:-}")"
 
 failed_mods=0
-for m in $(gpu_module_stack "${HOST_GPU_DRIVER:-}"); do
-    mod_unload "$m" || failed_mods=1
+for m in $STACK; do
+    mod_unload "$m" 1500 || failed_mods=1
 done
+
+if [ "$failed_mods" -ne 0 ]; then
+    # Something is still holding a GPU node. Only now is killing it justified.
+    kill_gpu_holders
+    failed_mods=0
+    for m in $STACK; do
+        mod_unload "$m" 8000 || failed_mods=1
+    done
+fi
+
 for m in $(gpu_aux_modules "${HOST_GPU_DRIVER:-}"); do
-    mod_unload "$m" 4 || true      # best effort, these are not fatal
+    mod_unload "$m" 500 || true     # best effort, these are not fatal
 done
 
 # Deliberately NOT touching drm / drm_kms_helper / drm_buddy / ttm and friends.
@@ -177,12 +231,13 @@ if [ "$failed_mods" -ne 0 ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 6. Load vfio
+# 7. Hand the functions to vfio
 # ---------------------------------------------------------------------------
 
-mod_load vfio
-mod_load vfio_iommu_type1
-mod_load vfio_pci
+wait "$VFIOMOD_PID" 2>/dev/null || vfio_warn "vfio module preload reported a problem"
+for m in vfio vfio_iommu_type1 vfio_pci; do
+    mod_loaded "$m" || mod_load "$m"
+done
 
 # With managed='yes' libvirt performs the vfio-pci bind itself; doing it here as
 # well just races it. Only bind manually for managed='no' domains.
@@ -196,5 +251,5 @@ fi
 # libvirtd while libvirtd is synchronously blocked waiting for this hook, which
 # contends on the hostdev manager lock. It is also redundant with managed='yes'.
 
-vfio_log "=== prepare/begin complete for '$GUEST' ==="
+vfio_log "=== prepare/begin complete for '$GUEST' in $(( $(vfio_now_ms) - T0 ))ms ==="
 exit 0

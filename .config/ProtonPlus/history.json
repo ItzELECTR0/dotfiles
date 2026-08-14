@@ -18,15 +18,6 @@
     "error_message" : ""
   },
   {
-    "title" : "DW-Proton Latest",
-    "displayed_title" : "DW-Proton Latest",
-    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
-    "is_finished" : true,
-    "install_success" : true,
-    "canceled" : false,
-    "error_message" : ""
-  },
-  {
     "title" : "Proton-GE Latest",
     "displayed_title" : "Proton-GE Latest",
     "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
@@ -56,6 +47,15 @@
   {
     "title" : "Proton-EM Latest",
     "displayed_title" : "Proton-EM Latest",
+    "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
+    "is_finished" : true,
+    "install_success" : true,
+    "canceled" : false,
+    "error_message" : ""
+  },
+  {
+    "title" : "DW-Proton Latest",
+    "displayed_title" : "DW-Proton Latest",
     "icon_path" : "/com/vysp3r/ProtonPlus/steam.svg",
     "is_finished" : true,
     "install_success" : true,

@@ -104,7 +104,8 @@ lock_keys = true
 keyboard_layout = true
 # v4 notifications.enableMediaToast = false
 media = false
-privacy = true
+# v4 privacy-indicator enableToast = false
+privacy = false
 keyboard_backlight = true
 
 # ─── System monitor ───────────────────────────────────────────────────────

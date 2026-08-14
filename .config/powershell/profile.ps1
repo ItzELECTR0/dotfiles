@@ -265,6 +265,7 @@ Set-Alias elts Start-ELTS
 Set-Alias twaos Start-TWAOS
 Set-Alias macOS Start-macOS
 Set-Alias macmount Mount-macOS
+Set-Alias winmount Mount-Windows
 Set-Alias depotbuild Start-SteamDepotBuild
 
 # INFORMATION
@@ -571,6 +572,10 @@ function Start-macOS {
 
 function Mount-macOS {
     bash -c "$HOME/.dotfiles/scripts/macmount.sh"
+}
+
+function Mount-Windows {
+    bash -c "$HOME/.dotfiles/scripts/winmount.sh"
 }
 
 function Start-MediaManagement {
@@ -926,7 +931,7 @@ function Start-DockerContainerUpdate {
 function Update-Feishin {
     [CmdletBinding()]
     param(
-        [string]$RepoPath = "$HOME/Development/Repositories/feishin",
+        [string]$RepoPath = "$HOME/Development/Repositories/github/feishin",
         [switch]$Gitless
     )
     
@@ -1232,7 +1237,7 @@ function Update-AURgitPackage {
 
 function Update-ElectricAUR {
     param (
-        [string]$RepoPath = "$HOME/Development/.electric-aur",
+        [string]$RepoPath = "$HOME/Development/Repositories/electric-aur",
         [string]$RepoName = "electric-aur"
     )
 

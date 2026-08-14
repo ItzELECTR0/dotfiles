@@ -53,7 +53,6 @@ atlantic
 auth_rpcgss
 autofs4
 battery
-bcachefs
 bch
 binder
 binfmt_misc
@@ -416,8 +415,12 @@ nls_cp437
 nls_iso8859_1
 nls_utf8
 nouveau
-ntfs3
+ntfs
 ntsync
+nvidia
+nvidia_drm
+nvidia_modeset
+nvidia_uvm
 nvidia_wmi_ec_backlight
 nvme
 nvme_auth
@@ -509,6 +512,10 @@ seqiv
 serial_multi_instantiate
 serio
 serio_raw
+serpent_avx2
+serpent_avx_x86_64
+serpent_generic
+serpent_sse2_x86_64
 ses
 sg
 sha1_ssse3
@@ -607,6 +614,7 @@ spi_intel_platform
 spi_nor
 spi_pxa2xx_core
 spi_pxa2xx_platform
+spl
 squashfs
 sr_mod
 st
@@ -642,6 +650,11 @@ tuner_simple
 tuner_types
 tunnel4
 tunnel6
+twofish_avx_x86_64
+twofish_common
+twofish_generic
+twofish_x86_64
+twofish_x86_64_3way
 typec
 typec_displayport
 typec_ucsi
@@ -670,7 +683,6 @@ usbnet
 uvc
 uvcvideo
 v4l2_dv_timings
-v4l2loopback
 veth
 vfat
 vfio
@@ -729,6 +741,7 @@ xt_addrtype
 xt_bpf
 xt_cgroup
 xt_comment
+xt_connmark
 xt_conntrack
 xt_hl
 xt_ipvs
@@ -740,5 +753,6 @@ xt_set
 xt_state
 xt_tcpudp
 xxhash_generic
+zfs
 zlib_deflate
 zram

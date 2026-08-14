@@ -7,10 +7,12 @@ hl.workspace_rule({workspace = 5, monitor = "HDMI-A-1", persistent = true})
 hl.workspace_rule({workspace = 6, monitor = "HDMI-A-1", default = true, persistent = true})
 
 ---[===Layer=Rules===]---
--- Namespaces cover both Noctalia v4 and v5 surfaces; v5 adds window-switcher
--- and replaces the v4 "background" layer with "backdrop".
-hl.layer_rule({match = {namespace = "^noctalia-(background|backdrop).*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})
-hl.layer_rule({match = {namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd|window-switcher)$"}, no_anim = true, ignore_alpha = 0.5, blur = true, blur_popups = true})
+hl.layer_rule({match = {namespace = "^noctalia-backdrop.*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})
+hl.layer_rule({match = {namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd)$"}, no_anim = true, ignore_alpha = 0.5, blur = true, blur_popups = true})
+-- Window switcher covers the whole screen, so the global blur (size 8, passes 4)
+-- reads as an aggressive full-screen smear. Left unblurred instead; per-layer
+-- rules can only toggle blur, not soften it -- strength is global.
+hl.layer_rule({match = {namespace = "^noctalia-window-switcher$"}, no_anim = true, blur = false})
 
 ---[===Shape=Rules===]---
 --hl.plugin.dynamic_cursors.shape_rule({shape = "grab", mode = "tilt", tilt = {limit = 2000, window = 100}})

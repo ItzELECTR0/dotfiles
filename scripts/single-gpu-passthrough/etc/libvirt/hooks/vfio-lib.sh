@@ -12,6 +12,11 @@
 [ -n "${VFIO_LIB_SOURCED:-}" ] && return 0
 VFIO_LIB_SOURCED=1
 
+# Every timestamp, number and pattern below is parsed, not displayed. A stray
+# locale turns EPOCHREALTIME's separator into a comma and breaks the millisecond
+# arithmetic the whole "wait for the real thing" model is built on.
+export LC_ALL=C
+
 VFIO_STATE_DIR="${VFIO_STATE_DIR:-/run/libvirt/vfio-hook}"
 VFIO_LOG="${VFIO_LOG:-/var/log/libvirt/vfio-hook.log}"
 
@@ -21,13 +26,30 @@ mkdir -p "$(dirname "$VFIO_LOG")" 2>/dev/null
 # --------------------------------------------------------------------------
 # logging
 # --------------------------------------------------------------------------
+# A hook logs on the order of fifty lines, and the naive implementation forks
+# date(1) and logger(1) for every one of them. On the switch path that is a
+# tenth of a second of pure fork overhead, so both are hoisted out: the
+# timestamp comes from bash's printf, and syslog gets one long-lived logger
+# fed through a file descriptor.
+
+VFIO_LOG_FD=""
+{ exec {VFIO_LOG_FD}>>"$VFIO_LOG"; } 2>/dev/null || VFIO_LOG_FD=""
+
+# The logger gets its own stdout/stderr so it holds nothing of libvirtd's pipe
+# open: a hook that has exited but whose grandchild still owns stderr is a hook
+# libvirtd can sit and wait on.
+VFIO_SYSLOG_FD=""
+if [ "${VFIO_SYSLOG:-1}" != 0 ] && command -v logger >/dev/null 2>&1; then
+    { exec {VFIO_SYSLOG_FD}> >(exec logger -t "${VFIO_TAG:-vfio-hook}" >/dev/null 2>&1); } 2>/dev/null \
+        || VFIO_SYSLOG_FD=""
+fi
 
 vfio_log() {
     local msg
-    msg="$(date '+%Y-%m-%d %H:%M:%S') [${VFIO_TAG:-vfio-hook}] $*"
-    printf '%s\n' "$msg" >>"$VFIO_LOG" 2>/dev/null
+    printf -v msg '%(%Y-%m-%d %H:%M:%S)T [%s] %s' -1 "${VFIO_TAG:-vfio-hook}" "$*"
+    [ -n "$VFIO_LOG_FD" ] && printf '%s\n' "$msg" >&"$VFIO_LOG_FD" 2>/dev/null
     printf '%s\n' "$msg" >&2
-    command -v logger >/dev/null 2>&1 && logger -t "${VFIO_TAG:-vfio-hook}" -- "$*"
+    [ -n "$VFIO_SYSLOG_FD" ] && printf '%s\n' "$*" >&"$VFIO_SYSLOG_FD" 2>/dev/null
     return 0
 }
 
@@ -43,6 +65,60 @@ vfio_run() {
     esac
     vfio_log "run(${t}s): $*"
     timeout --kill-after=5 "$t" "$@"
+}
+
+# --------------------------------------------------------------------------
+# waiting
+# --------------------------------------------------------------------------
+# Nothing in the handover path sleeps for a fixed duration. Every step that has
+# to wait waits on the condition it actually cares about and continues the
+# millisecond it holds, because the wall-clock cost of the switch is dominated
+# by these waits.
+
+# Sub-second naps without forking sleep(1). Opening a process substitution
+# read-write keeps a writer alive on our side, so the read never sees EOF and
+# the timeout is what expires.
+VFIO_NAP_FD=""
+{ exec {VFIO_NAP_FD}<> <(:); } 2>/dev/null || VFIO_NAP_FD=""
+
+vfio_nap() {
+    if [ -n "$VFIO_NAP_FD" ]; then
+        read -r -t "$1" -u "$VFIO_NAP_FD" _ 2>/dev/null
+    else
+        sleep "$1"
+    fi
+    return 0
+}
+
+# Milliseconds on a monotonic-enough clock. EPOCHREALTIME is a bash builtin, so
+# reading it costs nothing.
+vfio_now_ms() {
+    local e="${EPOCHREALTIME:-}"
+    if [ -n "$e" ]; then
+        printf '%s' "$(( ${e%.*} * 1000 + 10#${e#*.} / 1000 ))"
+    else
+        printf '%s' "$(( SECONDS * 1000 ))"
+    fi
+}
+
+# vfio_wait <timeout_ms> <command...>
+# Returns 0 the moment <command> succeeds, 1 if the budget runs out. The poll
+# interval ramps 2ms -> 20ms: conditions that clear immediately (the common
+# case) cost one extra check, a slow one does not spin a core, and the interval
+# is capped low enough that the ramp itself never adds a visible delay.
+vfio_wait() {
+    local budget="$1"; shift
+    local deadline=$(( $(vfio_now_ms) + budget )) nap=0.002
+    while :; do
+        "$@" && return 0
+        [ "$(vfio_now_ms)" -lt "$deadline" ] || return 1
+        vfio_nap "$nap"
+        case "$nap" in
+            0.002) nap=0.005 ;;
+            0.005) nap=0.010 ;;
+            *)     nap=0.020 ;;
+        esac
+    done
 }
 
 # --------------------------------------------------------------------------
@@ -290,6 +366,25 @@ pci_reprobe() {
     return 0
 }
 
+# Function-level reset. A QEMU that was killed rather than shut down can leave
+# the card mid-transaction; the host driver then binds and finds dead silicon,
+# which is the "only a power cycle brings it back" failure. Must be called while
+# the function is unbound from every driver.
+pci_reset() {
+    local addr="$1" f="/sys/bus/pci/devices/$1/reset"
+    [ -w "$f" ] || { vfio_log "$addr: no reset node, skipping FLR"; return 1; }
+    if pci_driver_of "$addr" >/dev/null 2>&1; then
+        vfio_warn "$addr: still bound to $(pci_driver_of "$addr"); not resetting"
+        return 1
+    fi
+    if echo 1 >"$f" 2>/dev/null; then
+        vfio_log "$addr: function reset OK"
+        return 0
+    fi
+    vfio_warn "$addr: function reset failed"
+    return 1
+}
+
 # --------------------------------------------------------------------------
 # kernel module helpers
 # --------------------------------------------------------------------------
@@ -298,18 +393,21 @@ mod_loaded() { lsmod 2>/dev/null | awk '{print $1}' | grep -qx -- "$1"; }
 
 mod_users() { lsmod 2>/dev/null | awk -v m="$1" '$1==m {for(i=4;i<=NF;i++) printf "%s ", $i}'; }
 
-# Retry because refcounts drop asynchronously after the session dies.
+# Retry because refcounts drop asynchronously after the session dies. The retry
+# loop doubles as the readiness check for the whole teardown: a failing
+# modprobe -r is cheap and returns immediately, so polling it is a faster and
+# more honest "is userspace off the GPU yet" test than sleeping a fixed two
+# seconds and hoping. Budget is in milliseconds.
+_mod_rmmod_quiet() { modprobe -r "$1" 2>/dev/null; }
+
 mod_unload() {
-    local m="$1" tries="${2:-20}" i
+    local m="$1" budget="${2:-3000}"
     mod_loaded "$m" || return 0
-    for ((i = 0; i < tries; i++)); do
-        if modprobe -r "$m" 2>/dev/null; then
-            vfio_log "unloaded module $m"
-            return 0
-        fi
-        sleep 0.25
-    done
-    vfio_warn "could not unload $m (in use by: $(mod_users "$m"))"
+    if vfio_wait "$budget" _mod_rmmod_quiet "$m"; then
+        vfio_log "unloaded module $m"
+        return 0
+    fi
+    vfio_warn "could not unload $m within ${budget}ms (in use by: $(mod_users "$m"))"
     return 1
 }
 
@@ -409,12 +507,12 @@ fbcon_rebind() {
 }
 
 wait_for_fb() {
-    local deadline=$(( SECONDS + ${1:-10} ))
-    while [ "$SECONDS" -lt "$deadline" ]; do
-        fb_present && { vfio_log "framebuffer present: $(cat /sys/class/graphics/fb0/name 2>/dev/null)"; return 0; }
-        sleep 0.25
-    done
-    vfio_warn "no framebuffer appeared within ${1:-10}s"
+    local secs="${1:-10}"
+    if vfio_wait $(( secs * 1000 )) fb_present; then
+        vfio_log "framebuffer present: $(cat /sys/class/graphics/fb0/name 2>/dev/null)"
+        return 0
+    fi
+    vfio_warn "no framebuffer appeared within ${secs}s"
     return 1
 }
 
@@ -467,29 +565,51 @@ sysfb_rebind() {
 # processes holding the GPU
 # --------------------------------------------------------------------------
 
-kill_gpu_holders() {
+# Never signal ourselves or anything we are running under - libvirtd is an
+# ancestor of a hook process, and killing it takes the VM start with it.
+protected_pids() {
+    local safe="" p=$$
+    while [ -n "$p" ] && [ "$p" -gt 1 ] 2>/dev/null; do
+        safe="$safe $p"
+        p="$(awk '{print $4}' "/proc/$p/stat" 2>/dev/null)"
+    done
+    printf '%s\n' "$safe"
+}
+
+# pids holding an open fd on $1. Walks /proc directly so it needs neither lsof
+# nor fuser. A trailing slash means "anything under this directory"; without one
+# the match is exact, so /dev/vfio/8 does not also catch /dev/vfio/80.
+proc_fd_holders() {
+    local want="$1" p l t
+    for p in /proc/[0-9]*; do
+        [ -d "$p/fd" ] || continue
+        for l in "$p/fd"/*; do
+            [ -L "$l" ] || continue
+            t="$(readlink "$l" 2>/dev/null)" || continue
+            t="${t% (deleted)}"
+            if [ "$t" = "$want" ] || { [ "${want%/}" != "$want" ] && [ "${t#"$want"}" != "$t" ]; }; then
+                basename "$p"
+                break
+            fi
+        done
+    done
+}
+
+gpu_holders() {
     local nodes=() n
     for n in /dev/nvidia* /dev/dri/card* /dev/dri/renderD*; do
         [ -e "$n" ] && nodes+=("$n")
     done
     [ "${#nodes[@]}" -gt 0 ] || return 0
 
-    # Never signal ourselves or anything we are running under - libvirtd is an
-    # ancestor of this process and killing it takes the VM start with it.
-    local safe="" p=$$
-    while [ -n "$p" ] && [ "$p" -gt 1 ] 2>/dev/null; do
-        safe="$safe $p"
-        p="$(awk '{print $4}' "/proc/$p/stat" 2>/dev/null)"
-    done
-    vfio_log "protected pids:$safe"
+    local safe p raw pids=""
+    safe="$(protected_pids)"
 
-    local raw pids=""
     if command -v fuser >/dev/null 2>&1; then
         raw="$(fuser "${nodes[@]}" 2>/dev/null | tr -s ' ' '\n')"
     elif command -v lsof >/dev/null 2>&1; then
         raw="$(lsof -t "${nodes[@]}" 2>/dev/null)"
     else
-        vfio_warn "neither fuser nor lsof available; cannot evict GPU holders"
         return 0
     fi
 
@@ -499,14 +619,34 @@ kill_gpu_holders() {
         case " $pids " in *" $p "*) continue ;; esac   # a pid holds several nodes
         pids="$pids $p"
     done
+    printf '%s\n' "${pids# }"
+}
 
+_no_gpu_holders() { [ -z "$(gpu_holders)" ]; }
+
+kill_gpu_holders() {
+    if ! command -v fuser >/dev/null 2>&1 && ! command -v lsof >/dev/null 2>&1; then
+        vfio_warn "neither fuser nor lsof available; cannot evict GPU holders"
+        return 0
+    fi
+
+    local pids
+    pids="$(gpu_holders)"
     [ -n "$pids" ] || return 0
-    vfio_log "evicting processes holding the GPU:$pids"
+
+    vfio_log "evicting processes holding the GPU: $pids"
     # shellcheck disable=SC2086
     kill -TERM $pids 2>/dev/null
-    sleep 2
+    # Escalate the instant the last fd is gone rather than on a fixed grace
+    # period; a compositor that exits cleanly does so in tens of milliseconds.
+    vfio_wait 2000 _no_gpu_holders && return 0
+
+    pids="$(gpu_holders)"
+    [ -n "$pids" ] || return 0
+    vfio_log "still holding the GPU after SIGTERM, killing: $pids"
     # shellcheck disable=SC2086
     kill -KILL $pids 2>/dev/null
+    vfio_wait 2000 _no_gpu_holders || vfio_warn "GPU still held by: $(gpu_holders)"
     return 0
 }
 
@@ -519,7 +659,100 @@ state_get()  { cat "$VFIO_STATE_DIR/$1" 2>/dev/null; }
 state_has()  { [ -e "$VFIO_STATE_DIR/$1" ]; }
 state_drop() { rm -f "$VFIO_STATE_DIR/$1"; }
 
-# Optional user overrides. Anything set here wins over auto-detection.
+# --------------------------------------------------------------------------
+# guest list / user configuration
+# --------------------------------------------------------------------------
+# vms.conf lives in the desktop user's home, so guests can be added without
+# root and it can be carried in a dotfiles repo like any other config. It is
+# therefore PARSED, NEVER SOURCED: sourcing a file the user can write from a
+# hook that libvirtd runs as root would be a straight local privilege
+# escalation, and "anything that runs as you can silently own root at the next
+# VM start" is too high a price for shell syntax in a list of names. Nothing
+# read out of it reaches a shell as code - guest names are only ever
+# string-compared. Shell-syntax overrides go in kvm.conf, which is root-owned
+# and sourced.
+#
+# Format, one directive per line, '#' starts a comment:
+#   vm <domain-name>      guest these hooks act on ('*' matches every guest)
+# A bare line with no keyword is treated as 'vm <line>'.
+#
+# Search order, first readable file wins:
+#   $VFIO_VM_LIST                                   (kvm.conf, explicit path)
+#   ~$VFIO_USER/.config/vfio-passthrough/vms.conf   (kvm.conf, by user name)
+#   /home/*/.config/vfio-passthrough/vms.conf       (autodetected)
+#   /etc/libvirt/hooks/vms.conf                     (system-wide fallback)
+
+VFIO_VM_LIST_RELPATH=".config/vfio-passthrough/vms.conf"
+VFIO_VM_LIST_SYSTEM="/etc/libvirt/hooks/vms.conf"
+
+# Resolved once at the bottom of this file, after kvm.conf has had its say.
+_vfio_resolve_vm_list() {
+    local p home hits=()
+
+    if [ -n "${VFIO_VM_LIST:-}" ]; then
+        printf '%s\n' "$VFIO_VM_LIST"
+        return 0
+    fi
+
+    if [ -n "${VFIO_USER:-}" ]; then
+        home="$(getent passwd "$VFIO_USER" 2>/dev/null | cut -d: -f6)"
+        if [ -n "$home" ] && [ -r "$home/$VFIO_VM_LIST_RELPATH" ]; then
+            printf '%s\n' "$home/$VFIO_VM_LIST_RELPATH"
+            return 0
+        fi
+        vfio_warn "VFIO_USER=$VFIO_USER has no readable ~/$VFIO_VM_LIST_RELPATH"
+    fi
+
+    for p in /home/*/"$VFIO_VM_LIST_RELPATH" "/root/$VFIO_VM_LIST_RELPATH"; do
+        [ -r "$p" ] && hits+=("$p")
+    done
+    if [ "${#hits[@]}" -gt 1 ]; then
+        vfio_warn "several users have a vms.conf (${hits[*]}); using ${hits[0]} - set VFIO_USER in kvm.conf to pick"
+    fi
+    if [ "${#hits[@]}" -gt 0 ]; then
+        printf '%s\n' "${hits[0]}"
+        return 0
+    fi
+
+    printf '%s\n' "$VFIO_VM_LIST_SYSTEM"
+}
+
+vfio_conf_values() {
+    local want="$1" file="$VFIO_VM_LIST_FILE" line key val
+    [ -r "$file" ] || return 0
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [ -n "$line" ] || continue
+        key="${line%%[[:space:]]*}"
+        case "$key" in
+            vm) val="${line#"$key"}"
+                val="${val#"${val%%[![:space:]]*}"}"
+                ;;
+            *)  key=vm; val="$line" ;;
+        esac
+        [ "$key" = "$want" ] && [ -n "$val" ] && printf '%s\n' "$val"
+    done <"$file"
+    return 0
+}
+
+# Does this domain get the passthrough treatment?
+vfio_guest_listed() {
+    local want="$1" v seen=0
+    while IFS= read -r v; do
+        seen=1
+        [ "$v" = "*" ] && return 0
+        [ "$v" = "$want" ] && return 0
+    done < <(vfio_conf_values vm)
+    [ "$seen" = 0 ] && vfio_warn "no guests configured in $VFIO_VM_LIST_FILE"
+    return 1
+}
+
+# Optional overrides, root-owned and sourced as shell. Anything set here wins
+# over auto-detection, including where the guest list is read from.
 [ -r /etc/libvirt/hooks/kvm.conf ] && . /etc/libvirt/hooks/kvm.conf
+
+VFIO_VM_LIST_FILE="$(_vfio_resolve_vm_list)"
 
 return 0

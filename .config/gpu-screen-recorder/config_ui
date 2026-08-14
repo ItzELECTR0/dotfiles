@@ -18,7 +18,7 @@ record.record_options.audio_track_item false device:alsa_input.usb-HP__Inc_Hyper
 record.record_options.change_video_resolution false
 record.record_options.codec hevc_10bit
 record.record_options.color_range full
-record.record_options.enable_vulkan_video_encoding false
+record.record_options.enable_vulkan_video_encoding true
 record.record_options.fps 60
 record.record_options.framerate_mode cfr
 record.record_options.low_power_mode false
@@ -30,7 +30,7 @@ record.record_options.record_cursor true
 record.record_options.restore_portal_session true
 record.record_options.show_notifications true
 record.record_options.use_led_indicator false
-record.record_options.video_bitrate 20000
+record.record_options.video_bitrate 21700
 record.record_options.video_height 1080
 record.record_options.video_quality custom
 record.record_options.video_width 1920
@@ -109,9 +109,9 @@ screenshot.save_screenshot_in_game_folder false
 screenshot.save_screenshot_to_clipboard false
 screenshot.save_screenshot_to_disk true
 screenshot.show_notifications true
-screenshot.take_screenshot_hotkey 102 0
-screenshot.take_screenshot_region_hotkey 102 4
-screenshot.take_screenshot_window_hotkey 102 1
+screenshot.take_screenshot_hotkey 0 0
+screenshot.take_screenshot_region_hotkey 0 0
+screenshot.take_screenshot_window_hotkey 0 0
 screenshot.use_led_indicator false
 streaming.custom.container flv
 streaming.custom.key 
@@ -142,16 +142,16 @@ streaming.record_options.video_bitrate 10235
 streaming.record_options.video_height 1080
 streaming.record_options.video_quality custom
 streaming.record_options.video_width 1920
-streaming.record_options.webcam_camera_fps 0
-streaming.record_options.webcam_camera_height 0
-streaming.record_options.webcam_camera_width 0
+streaming.record_options.webcam_camera_fps 30
+streaming.record_options.webcam_camera_height 2160
+streaming.record_options.webcam_camera_width 3840
 streaming.record_options.webcam_flip_horizontally false
 streaming.record_options.webcam_height 30
-streaming.record_options.webcam_source 
+streaming.record_options.webcam_source /dev/video0
 streaming.record_options.webcam_video_format auto
 streaming.record_options.webcam_width 30
-streaming.record_options.webcam_x 0
-streaming.record_options.webcam_y 0
+streaming.record_options.webcam_x 1
+streaming.record_options.webcam_y 33
 streaming.rumble.key 
 streaming.service youtube
 streaming.start_stop_hotkey 93 16

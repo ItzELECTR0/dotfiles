@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-# release/end - give the GPU back to the host.
+# _all/release/end - give the GPU back to the host.
+#
+# Lives under qemu.d/_all/ so it runs for every domain; vms.conf decides which
+# domains it acts on, and the teardown marker decides whether there is anything
+# to undo. A domain that never got the GPU (because another one already had it)
+# must fall straight through here, or stopping the second VM would rip the card
+# out from under the first.
 #
 # This also runs when the domain FAILED to start, which is the only thing
 # standing between a bad domain definition and a headless machine. It must
@@ -11,6 +17,10 @@
 # The wait is not cosmetic. Binding fbcon with zero registered framebuffers
 # NULL-derefs fbcon_cursor() in the kernel and kills this script mid-run, which
 # is exactly how a failed start turns into "no signal until you hit reset".
+#
+# Speed rule as in start.sh: the two slow halves of the restore - dropping the
+# vfio modules and loading the GPU driver stack - run concurrently, and every
+# wait polls its condition instead of sleeping a fixed amount.
 
 set -uo pipefail
 
@@ -19,13 +29,32 @@ VFIO_TAG=vfio-revert
 
 GUEST="${1:-unknown}"
 XML="$(cat 2>/dev/null || true)"
+FORCE="${VFIO_FORCE_REVERT:-0}"
 
+# ---------------------------------------------------------------------------
+# 0. Should this domain be reverting anything?
+# ---------------------------------------------------------------------------
+
+if [ "$FORCE" != 1 ] && ! vfio_guest_listed "$GUEST"; then
+    exit 0
+fi
+
+T0="$(vfio_now_ms)"
 vfio_log "=== release/end for domain '$GUEST' ==="
 
 # If prepare/begin never got past its preflight there is nothing to undo, and
 # touching the console here would be actively harmful.
 if ! state_has active; then
     vfio_log "no teardown marker - prepare/begin never handed the GPU over; nothing to do"
+    exit 0
+fi
+
+# The marker names the domain that actually holds the card. Anyone else - a
+# second passthrough VM whose start was refused, or one that never reached the
+# handover - must leave the restore alone.
+OWNER="$(state_get active)"
+if [ "$FORCE" != 1 ] && [ -n "$OWNER" ] && [ "$OWNER" != "$GUEST" ]; then
+    vfio_log "the GPU belongs to domain '$OWNER', not '$GUEST'; leaving it in place"
     exit 0
 fi
 
@@ -66,13 +95,16 @@ for d in "${GPU_DEVS[@]:-}"; do
     pci_clear_override "$d"
 done
 
-for m in $VFIO_MODULES; do
-    mod_unload "$m" 8 || true      # non-fatal: another VM may still hold vfio
-done
-
 # ---------------------------------------------------------------------------
 # 3. Bring the host GPU driver back
 # ---------------------------------------------------------------------------
+# Unloading vfio and loading the GPU stack are independent once the functions
+# are unbound, and they are the two slowest steps of the restore, so they run at
+# the same time. The vfio unload is still joined before anything is re-probed:
+# a vfio-pci carrying `ids=` from modprobe.d would otherwise be free to grab the
+# card back the moment we ask the bus to probe it.
+
+{ for m in $VFIO_MODULES; do mod_unload "$m" 4000 || true; done; } & VFIOMOD_PID=$!
 
 STACK="$(gpu_module_stack "$HOST_GPU_DRIVER")"
 # gpu_module_stack lists teardown order (outermost first); load in reverse.
@@ -86,9 +118,12 @@ for m in $REVERSED; do
     esac
 done
 
-for m in $(gpu_aux_modules "$HOST_GPU_DRIVER"); do
-    mod_load "$m" || true
-done
+# non-fatal: another VM may still hold vfio, and nothing below needs it gone.
+wait "$VFIOMOD_PID" 2>/dev/null || true
+
+{
+    for m in $(gpu_aux_modules "$HOST_GPU_DRIVER"); do mod_load "$m" || true; done
+} & AUXMOD_PID=$!
 
 # Re-probe every function so the secondary drivers (HDA audio, xHCI, i2c) come
 # back too. Prefer the driver we recorded at teardown time.
@@ -99,15 +134,19 @@ for d in "${GPU_DEVS[@]:-}"; do
 done
 
 # If a function is still orphaned, a bus rescan usually picks it up.
-orphans=0
-for d in "${GPU_DEVS[@]:-}"; do
-    [ -n "$d" ] || continue
-    pci_driver_of "$d" >/dev/null 2>&1 || orphans=1
-done
-if [ "$orphans" -ne 0 ]; then
+all_bound() {
+    local d
+    for d in "${GPU_DEVS[@]:-}"; do
+        [ -n "$d" ] || continue
+        pci_driver_of "$d" >/dev/null 2>&1 || return 1
+    done
+    return 0
+}
+
+if ! all_bound; then
     vfio_log "some functions still unbound; triggering PCI rescan"
     echo 1 >/sys/bus/pci/rescan 2>/dev/null || true
-    sleep 1
+    vfio_wait 3000 all_bound || vfio_warn "functions still unbound after rescan"
 fi
 
 # ---------------------------------------------------------------------------
@@ -129,18 +168,26 @@ fi
 # ---------------------------------------------------------------------------
 # 5. Userspace back up
 # ---------------------------------------------------------------------------
-
-for s in $(detect_gpu_services); do
-    state_has "svc_$s" && { svc_start "$s"; state_drop "svc_$s"; }
-done
+# The display manager is what the user is waiting to see, so it goes first and
+# everything else is pushed off the critical path.
 
 DM="$(state_get dm)"
 [ -n "$DM" ] || DM="$(detect_dm || true)"
+
+{
+    for s in $(detect_gpu_services); do
+        state_has "svc_$s" && { svc_start "$s"; state_drop "svc_$s"; }
+    done
+} & SVC_PID=$!
+
 if [ -n "$DM" ]; then
     svc_start "$DM"
 else
     vfio_warn "no display manager to start"
 fi
+
+wait "$SVC_PID"    2>/dev/null || true
+wait "$AUXMOD_PID" 2>/dev/null || true
 
 # NOTE: no `virsh nodedev-reattach` here. Beyond the re-entrancy problem, it is
 # redundant with managed='yes', and its failure mode is a hook that gets killed
@@ -153,5 +200,5 @@ state_drop gpu_driver
 state_drop dm
 rm -f "$VFIO_STATE_DIR/drivers"
 
-vfio_log "=== release/end complete for '$GUEST' ==="
+vfio_log "=== release/end complete for '$GUEST' in $(( $(vfio_now_ms) - T0 ))ms ==="
 exit 0
