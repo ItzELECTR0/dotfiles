@@ -251,5 +251,13 @@ fi
 # libvirtd while libvirtd is synchronously blocked waiting for this hook, which
 # contends on the hostdev manager lock. It is also redundant with managed='yes'.
 
+# Record current CPU governor and set to performance for all CPUs
+if [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+    ORIG_GOV="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)"
+    state_set governor "$ORIG_GOV"
+    vfio_log "recording CPU governor '$ORIG_GOV' and setting to performance"
+    echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null || true
+fi
+
 vfio_log "=== prepare/begin complete for '$GUEST' in $(( $(vfio_now_ms) - T0 ))ms ==="
 exit 0

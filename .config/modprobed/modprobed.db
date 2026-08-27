@@ -747,6 +747,7 @@ xt_hl
 xt_ipvs
 xt_limit
 xt_mark
+xt_multiport
 xt_nat
 xt_recent
 xt_set

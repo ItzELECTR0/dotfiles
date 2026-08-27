@@ -14,5 +14,7 @@
     "js/ts.updateImportsOnFileMove.enabled": "always",
     "csharp.suppressDotnetInstallWarning": true,
     "dotnet.codeLens.enableReferencesCodeLens": false,
-    "workbench.editor.empty.hint": "hidden"
+    "workbench.editor.empty.hint": "hidden",
+    "intellij.region": "europe",
+    "intellij.dataSharing": "none"
 }

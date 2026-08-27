@@ -193,6 +193,16 @@ wait "$AUXMOD_PID" 2>/dev/null || true
 # redundant with managed='yes', and its failure mode is a hook that gets killed
 # halfway through the restore.
 
+# Restore CPU governor
+if state_has governor; then
+    GOV="$(state_get governor)"
+    if [ -n "$GOV" ] && [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+        vfio_log "restoring CPU governor to '$GOV'"
+        echo "$GOV" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null || true
+    fi
+    state_drop governor
+fi
+
 state_drop active
 state_drop devices
 state_drop primary

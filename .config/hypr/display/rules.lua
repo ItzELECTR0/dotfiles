@@ -9,19 +9,16 @@ hl.workspace_rule({workspace = 6, monitor = "HDMI-A-1", default = true, persiste
 ---[===Layer=Rules===]---
 hl.layer_rule({match = {namespace = "^noctalia-backdrop.*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})
 hl.layer_rule({match = {namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd)$"}, no_anim = true, ignore_alpha = 0.5, blur = true, blur_popups = true})
--- Window switcher covers the whole screen, so the global blur (size 8, passes 4)
--- reads as an aggressive full-screen smear. Left unblurred instead; per-layer
--- rules can only toggle blur, not soften it -- strength is global.
 hl.layer_rule({match = {namespace = "^noctalia-window-switcher$"}, no_anim = true, blur = false})
 
 ---[===Shape=Rules===]---
 --hl.plugin.dynamic_cursors.shape_rule({shape = "grab", mode = "tilt", tilt = {limit = 2000, window = 100}})
 
 ---[===Ignore=Maximize===]---
-hl.window_rule({match = {class = ".*"}, suppress_event = maximize})
+hl.window_rule({match = {class = ".*"}, suppress_event = "maximize"})
 
 ---[===Fix=XWayland=Dragging===]---
-hl.window_rule({match = {class = "^$", title = "^$", xwayland = true, float = true, fullscreen = false, pin = false}, no_focus = true})
+hl.window_rule({match = {class = "^$", title = "^$", xwayland = true, float = true, fullscreen = false, pin = false}, no_focus = true, suppress_event = "activatefocus"})
 
 ---[===Effects=Ignore=Fullscreen===]---
 hl.window_rule({match = {fullscreen = true}, no_blur = true, no_dim = true})
@@ -40,17 +37,20 @@ hl.window_rule({match = {class = "librewolf"}, opaque = true, no_initial_focus =
 hl.window_rule({match = {class = "librewolf", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
 hl.window_rule({match = {class = "zen|zen-twilight"}, opaque = true, no_initial_focus = true, monitor = "DP-1", workspace = 1})
 hl.window_rule({match = {class = "zen|zen-twilight", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
-hl.window_rule({match = {class = "com.mojang.[Mm]inecraft"}, immediate = true, monitor = "DP-1", no_initial_focus = true, fullscreen = true, workspace = 2})
-hl.window_rule({match = {class = "[Pp]andora[Ll]auncher", title = "Minecraft Game Output"}, monitor = "DP-1", workspace = 2})
+-- Minecraft: modern (GLFW class "Minecraft* 26.2" / "Minecraft 1.21.4"), legacy LWJGL2 and launcher-wrapper classes
+hl.window_rule({match = {class = "^([Mm]inecraft\\*?(\\s.*)?|com\\.mojang\\.[Mm]inecraft.*|com-moulberry-pandora-LaunchWrapper|net-minecraft-client-main-Main|net\\.minecraft\\.client\\.main\\.Main|org-(prism|multimc|poly)launcher-EntryPoint)$"}, immediate = true, monitor = "DP-1", no_initial_focus = true, fullscreen = true, workspace = "2 silent"})
+-- Fallback: XWayland windows that map before WM_CLASS is set, matched on the version title instead
+hl.window_rule({match = {title = "^[Mm]inecraft\\*?\\s\\d[\\w.+-]*$"}, immediate = true, monitor = "DP-1", no_initial_focus = true, workspace = "2 silent"})
+hl.window_rule({match = {class = "[Pp]andora[Ll]auncher", title = "Minecraft Game Output"}, monitor = "DP-1", no_initial_focus = true, workspace = "2 silent"})
 hl.window_rule({match = {class = "Unity"}, monitor = "DP-1", no_initial_focus = true, workspace = 3})
 hl.window_rule({match = {class = "steam", title = "Steam Big Picture Mode"}, monitor = "DP-1", fullscreen = true, workspace = 2})
 hl.window_rule({match = {initial_class = "wondershare filmora.exe", class = "wondershare filmora.exe", title = "Wondershare Filmora"}, tile = true, opacity = 1.0, no_blur = true, no_initial_focus = true, monitor = "DP-1", workspace = 2})
 
 ---[===Vertical=Monitor=Apps===]---
-hl.window_rule({match = {class = "[Ss]team|[Hh]eroic|modrinth-app"}, monitor = "HDMI-A-1", workspace = 5, no_initial_focus = true})
-hl.window_rule({match = {class = "[Dd]iscord-[Cc]anary|[Dd]iscord-[Pp][Tt][Bb]|[Dd]iscord"}, monitor = "HDMI-A-1", workspace = 6, no_initial_focus = true})
+hl.window_rule({match = {class = "[Ss]team|[Hh]eroic|modrinth-app"}, monitor = "HDMI-A-1", workspace = "5 silent", no_initial_focus = true, suppress_event = "activatefocus"})
+hl.window_rule({match = {class = "[Dd]iscord-[Cc]anary|[Dd]iscord-[Pp][Tt][Bb]|[Dd]iscord"}, monitor = "HDMI-A-1", workspace = "6 silent", no_initial_focus = true, suppress_event = "activatefocus"})
 hl.window_rule({match = {class = "[Dd]iscord-[Cc]anary|[Dd]iscord-[Pp][Tt][Bb]|[Dd]iscord", fullscreen = true}, opaque = true})
-hl.window_rule({match = {class = "[Ff]eishin"}, monitor = "HDMI-A-1", workspace = 6, no_initial_focus = true})
+hl.window_rule({match = {class = "[Ff]eishin"}, monitor = "HDMI-A-1", workspace = "6 silent", no_initial_focus = true})
 
 ---[===Floating=Windows===]---
 hl.window_rule({match = {class = "librewolf", float = true}, size = "1640 980"})
