@@ -197,6 +197,7 @@ hid_roccat_ryos
 hid_sony
 hid_steam
 hid_wiimote
+hid_xpadneo
 hidp
 hkdf
 hp_wmi
@@ -242,6 +243,7 @@ intel_oc_wdt
 intel_pch_thermal
 intel_pmc_bxt
 intel_pmc_core
+intel_pmc_pwrm_telemetry
 intel_pmc_ssram_telemetry
 intel_powerclamp
 intel_rapl_common
