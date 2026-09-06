@@ -100,9 +100,9 @@ hl.bind(MOD .. " + ALT + B", hl.dsp.exec_cmd(alternateBrowser))
 hl.bind(MOD .. " + SHIFT + B", hl.dsp.exec_cmd(privateBrowser))
 -- TEMPORARY: menu moved off "SUPER + Super_L" to "SUPER + SPACE".
 -- https://github.com/hyprwm/Hyprland/discussions/15837
--- hl.bind(MOD .. " + Super_L", hl.dsp.exec_cmd(menu))
--- hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(nocControlCenter))
-hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(menu))
+hl.bind(MOD .. " + Super_L", hl.dsp.exec_cmd(menu), {release = true})
+hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(nocControlCenter))
+--hl.bind(MOD .. " + SPACE", hl.dsp.exec_cmd(menu))
 hl.bind(MOD .. " + comma", hl.dsp.exec_cmd(nocSettings))
 hl.bind(MOD .. " + period", hl.dsp.exec_cmd("emote"))
 hl.bind(MOD .. " + RETURN", hl.dsp.exec_cmd(terminal))

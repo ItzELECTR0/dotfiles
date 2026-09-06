@@ -22,15 +22,15 @@ historyOutIconFg: #ff8c21;
 historyIconFgInverted: #e8e8e8;
 
 msgServiceBg: #1f1f1f;
-msgServiceBgSelected: #381b14;
+msgServiceBgSelected: #361c16;
 msgServiceFg: #e8e8e8;
 historyUnreadBarBg: #1f1f1f; // Unread messages banner background
 historyUnreadBarFg: #e8e8e8; // Unread messages banner text
 historyUnreadBarBorder: #08080800; // Unread messages banner border
 botKbBg: #1f1f1f; // Inline bot keyboard button background
-botKbDownBg: #381b14; // Inline bot keyboard button pressed
+botKbDownBg: #361c16; // Inline bot keyboard button pressed
 msgBotKbIconFg: #707880; // Inline bot keyboard button icon
-msgOutBg: #381b14;
+msgOutBg: #361c16;
 msgOutBgSelected: #292929;
 msgOutServiceFg: #e8e8e8;
 historyTextOutFg: #e8e8e8; // Outgoing bubble text
@@ -58,7 +58,7 @@ activeButtonFgOver: #ffe5cc; // Active button hover text
 activeButtonSecondaryFg: #0f0f0f; // Active button secondary text
 activeButtonSecondaryFgOver: #ffe5cc; // Active button secondary hover text
 activeLineFg: #e8e8e8;
-dialogsBgActive: #381b14;
+dialogsBgActive: #361c16;
 dialogsNameFg: #e8e8e8; // Chat list name text
 dialogsNameFgActive: #e8e8e8; // Selected chat name text (same as bubble text)
 dialogsTextFgActive: #e8e8e8; // Selected chat preview text (same as bubble text)
@@ -83,7 +83,7 @@ lightButtonFgOver: #707880; // Light button hover text
 
 attentionButtonFg: #cc3311;
 attentionButtonFgOver: #cc3311;
-attentionButtonBgOver: #4c0e00;
+attentionButtonBgOver: #471105;
 attentionButtonBgRipple: #fbd8d0;
 
 outlineButtonBg: #141414; // Outline button background
