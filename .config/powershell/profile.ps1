@@ -90,6 +90,9 @@ $env:EDITOR = "edit"
 $env:USE_CCACHE = 1
 $env:CCACHE_EXEC = "/usr/bin/ccache"
 
+# Define SI (base 1000) sizes for coreutils
+$env:BLOCK_SIZE = "si"
+
 # -------------------------------------------
 # GENERAL FUNCTIONS
 # -------------------------------------------
@@ -319,7 +322,7 @@ Set-Alias open Open-Directory
 Write-Host ""
 if ($Host.UI.RawUI.KeyAvailable -eq $false) {
     if (Get-Command fastfetch -ErrorAction SilentlyContinue) {
-        fastfetch --size-binary-prefix si
+        fastfetch
     } elseif (Get-Command neofetch -ErrorAction SilentlyContinue) {
         neofetch
     }
@@ -346,13 +349,16 @@ function Get-Out {
     exit
 }
 
+function df { /usr/bin/df --si @args }
+function du { /usr/bin/du --si @args }
+
 function Start-CustomClear {
     Clear-Host
     Write-Host "PowerShell $($PSVersionTable.PSVersion)"
     Write-Host ""
     if ($Host.UI.RawUI.KeyAvailable -eq $false) {
         if (Get-Command fastfetch -ErrorAction SilentlyContinue) {
-            fastfetch --size-binary-prefix si
+            fastfetch
         } elseif (Get-Command neofetch -ErrorAction SilentlyContinue) {
             neofetch
         }

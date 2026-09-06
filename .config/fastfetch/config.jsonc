@@ -12,6 +12,9 @@
     "color": {
       "title": "red",
       "keys": "red"
+    },
+    "size": {
+      "binaryPrefix": "si"
     }
   },
   "modules": [

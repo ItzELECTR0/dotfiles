@@ -5,8 +5,12 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-alias ls='ls --color=auto'
+export BLOCK_SIZE=si
+
+alias ls='ls --color=auto --si'
 alias grep='grep --color=auto'
+alias df='df --si'
+alias du='du --si'
 # PS1='[\u@\h \W]\$ '
 
 

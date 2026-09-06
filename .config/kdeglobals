@@ -158,6 +158,9 @@ View Style=DetailTree
 [KShortcutsDialog Settings]
 Dialog Size=611,480
 
+[Locale]
+BinaryUnitDialect=3
+
 [WM]
 activeBackground=227,229,231
 activeBlend=227,229,231
