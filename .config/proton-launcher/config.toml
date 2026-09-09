@@ -1,4 +1,4 @@
-proton_version = "Proton - Experimental"
+proton_version = "Proton-Tkg Latest"
 prefix_path = "~/.proton"
 use_umu = true
 mangohud = false

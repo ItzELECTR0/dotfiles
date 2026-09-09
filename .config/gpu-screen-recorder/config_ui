@@ -60,7 +60,7 @@ replay.record_options.audio_track_item false device:alsa_input.usb-HP__Inc_Hyper
 replay.record_options.change_video_resolution false
 replay.record_options.codec hevc_10bit
 replay.record_options.color_range full
-replay.record_options.enable_vulkan_video_encoding false
+replay.record_options.enable_vulkan_video_encoding true
 replay.record_options.fps 60
 replay.record_options.framerate_mode cfr
 replay.record_options.low_power_mode false
