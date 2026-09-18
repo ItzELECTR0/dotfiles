@@ -34,7 +34,7 @@ show_empty_label = false
 type = "workspaces"
 style = "regular"
 # v4 labelMode = "name", characterCount = 2
-display = "name"
+display = "label_source"
 max_label_chars = 2
 # v4 pillSize
 pill_scale = 0.7

@@ -7,8 +7,11 @@
 # v4 volumeOverdrive
 enable_overdrive = true
 # v4 volumeFeedback / notifications.sounds.enabled
-enable_sounds = false
+enable_sounds = true
 sound_volume = 0.4
+notification_sound = "~/.local/share/sounds/electris/stereo/message-new-instant.wav"
+# enable_sounds also turns on volume feedback, which a silent file keeps off
+volume_change_sound = "~/.local/share/sounds/electris/stereo/silence.wav"
 
 # v4 systemMonitor.batteryWarningThreshold (v5 adds fixed 5% / 2% escalation
 # steps of its own; v4 batteryCriticalThreshold = 5 matches the first of them)

@@ -1,0 +1,2 @@
+prefix_rule(pattern=["git", "clone"], decision="allow")
+prefix_rule(pattern=["dotnet", "build"], decision="allow")

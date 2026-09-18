@@ -14,7 +14,7 @@ hidden_tabs = [ "monitor" ]
 show_shortcut_labels = true
 
 # v4 calendar.cards + location.showWeekNumberInCalendar
-[control_center.calendar]
+[calendar]
 show_events_card = false
 show_week_numbers = true
 event_date_format = "%A %e %B"
@@ -239,7 +239,7 @@ shutting_down = []
 #                        the nearest option but records via gpu-screen-recorder
 #                        rather than driving OBS.
 [plugins]
-auto_update = true
+auto_update = "all"
 enabled = [
     "noctalia/kaomoji",
     "noctalia/bitwarden",

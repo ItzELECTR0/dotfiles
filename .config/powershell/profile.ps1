@@ -256,6 +256,7 @@ Set-Alias profile Edit-Profile
 Set-Alias hyprconf Edit-Hyprland
 Set-Alias archconf Edit-DCLI
 Set-Alias logs Edit-Logs
+Set-Alias lazypod lazydocker
 
 # GIT SHORTCUTS
 Set-Alias commit Start-Git-Commit
@@ -663,7 +664,7 @@ function Start-Compressing {
 
         # h264: safe default for Discord; h265: ~25% more efficient;
         [ValidateSet('h264', 'h265')]
-        [string]$Codec = 'h264',
+        [string]$Codec = 'h265',
 
         [ValidateSet('auto', 'nvenc', 'cpu')]
         [string]$Encoder = 'auto',
@@ -1041,7 +1042,27 @@ function Mount-macOS {
 }
 
 function Mount-Windows {
-    bash -c "$HOME/.dotfiles/scripts/winmount.sh"
+    param(
+        [string]$Path,
+        [switch]$Live,
+        [switch]$Umount
+    )
+
+    $mountArgs = @()
+
+    if ($Path) {
+        $resolved = Resolve-Path -Path $Path -ErrorAction SilentlyContinue
+        if (-not $resolved) {
+            Write-Error "Image not found: $Path"
+            return
+        }
+        $mountArgs += @("--path", $resolved.Path)
+    }
+
+    if ($Live)   { $mountArgs += "--live" }
+    if ($Umount) { $mountArgs += "--umount" }
+
+    & bash "$HOME/.dotfiles/scripts/winmount.sh" @mountArgs
 }
 
 function Start-MediaManagement {

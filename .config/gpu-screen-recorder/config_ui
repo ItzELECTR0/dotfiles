@@ -1,6 +1,6 @@
 main.config_file_version 2
 main.exclude_metadata false
-main.hotkeys_enable_option enable_hotkeys
+main.hotkeys_enable_option enable_hotkeys_no_grab
 main.joystick_hotkeys_enable_option disable_hotkeys
 main.language 
 main.notification_speed fast
@@ -8,13 +8,14 @@ main.show_hide_hotkey 26 16
 main.software_encoding_warning_shown false
 main.tint_color nvidia
 main.wayland_warning_shown true
-record.container mp4
+record.container mov
 record.name_video_file_after_game false
 record.pause_unpause_hotkey 92 16
 record.record_options.advanced_view false
 record.record_options.audio_codec opus
 record.record_options.audio_track_item false [add_audio_track]
-record.record_options.audio_track_item false default_output
+record.record_options.audio_track_item false device:alsa_output.usb-HP__Inc_HyperX_Cloud_Alpha_Wireless_00000001-00.analog-stereo.monitor
+record.record_options.audio_track_item false device:alsa_input.usb-HP__Inc_HyperX_QuadCast_S-00.analog-stereo
 record.record_options.change_video_resolution false
 record.record_options.codec auto
 record.record_options.color_range limited
@@ -23,17 +24,17 @@ record.record_options.fps 60
 record.record_options.framerate_mode auto
 record.record_options.low_power_mode false
 record.record_options.overclock false
-record.record_options.record_area_height 0
+record.record_options.record_area_height 1080
 record.record_options.record_area_option focused_monitor
-record.record_options.record_area_width 0
+record.record_options.record_area_width 1920
 record.record_options.record_cursor true
 record.record_options.restore_portal_session true
 record.record_options.show_notifications true
 record.record_options.use_led_indicator false
-record.record_options.video_bitrate 40000
-record.record_options.video_height 0
-record.record_options.video_quality very_high
-record.record_options.video_width 0
+record.record_options.video_bitrate 6000
+record.record_options.video_height 1080
+record.record_options.video_quality custom
+record.record_options.video_width 1920
 record.record_options.webcam_camera_fps 0
 record.record_options.webcam_camera_height 0
 record.record_options.webcam_camera_width 0
@@ -60,7 +61,7 @@ replay.record_options.audio_track_item false device:alsa_input.usb-HP__Inc_Hyper
 replay.record_options.change_video_resolution false
 replay.record_options.codec hevc_10bit
 replay.record_options.color_range full
-replay.record_options.enable_vulkan_video_encoding true
+replay.record_options.enable_vulkan_video_encoding false
 replay.record_options.fps 60
 replay.record_options.framerate_mode cfr
 replay.record_options.low_power_mode false

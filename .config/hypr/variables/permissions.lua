@@ -51,6 +51,12 @@ hl.permission({
     type = "keyboard",
     mode = "allow"
 })
+-- ydotoold, for agent-driven input. Matches both spellings of the device name, nothing else.
+hl.permission({
+    binary = "ydotoold[- ]virtual[- ]device",
+    type = "keyboard",
+    mode = "allow"
+})
 hl.permission({
     binary = ".*",
     type = "keyboard",

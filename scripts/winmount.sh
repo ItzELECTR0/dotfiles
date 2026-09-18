@@ -14,43 +14,56 @@
 # process has locked (same thing `qemu-img -U` does).
 #
 # Counterpart to macmount.sh. Defaults to /dev/nbd1 so both can be mounted at
-# the same time.
+# the same time. The privileged half runs as one doas call, so it asks for
+# the password once instead of once per command.
 #
-# Usage: winmount.sh [-l|--live] [-u|--umount] [-h|--help]
+# Usage: winmount.sh [-p|--path IMG] [-l|--live] [-u|--umount] [-h|--help]
 #   (no args)     toggle mount/unmount
+#   -p, --path    mount this image instead of the default one
 #   -l, --live    force the read-only live path even if the VM looks shut down
 #   -u, --umount  unmount only, never mount
 #
 # Env overrides: WINMOUNT_IMG, WINMOUNT_DIR, WINMOUNT_NBD, WINMOUNT_PART,
-#                WINMOUNT_FORCE=1 (mount a dirty volume read-write anyway)
+#                WINMOUNT_FORMAT (skip format detection), WINMOUNT_FORCE=1
+#                (mount a dirty volume read-write anyway)
 
 set -uo pipefail
 
 IMG_PATH="${WINMOUNT_IMG:-/var/lib/libvirt/images/spark.img}"
-IMG_FORMAT="raw"
+IMG_FORMAT="${WINMOUNT_FORMAT:-}"   # empty = ask qemu-img what the image is
 MOUNT_POINT="${WINMOUNT_DIR:-$HOME/Windows}"
 NBD_DEV="${WINMOUNT_NBD:-/dev/nbd1}"
 PART_DEV="${WINMOUNT_PART:-}"   # empty = autodetect the largest NTFS partition
 FS_TYPE="ntfs3"
 FS_MODULE="ntfs3"
 
-FORCE_LIVE=0
-UMOUNT_ONLY=0
+SELF="$(readlink -f "$0")"
+MOUNT_UID="${WINMOUNT_UID:-$(id -u)}"
+MOUNT_GID="${WINMOUNT_GID:-$(id -g)}"
+
+FORCE_LIVE="${WINMOUNT_LIVE:-0}"
+UMOUNT_ONLY="${WINMOUNT_UMOUNT:-0}"
 
 usage() {
     cat <<'EOF'
-Usage: winmount.sh [-l|--live] [-u|--umount] [-h|--help]
+Usage: winmount.sh [-p|--path IMG] [-l|--live] [-u|--umount] [-h|--help]
   (no args)     toggle mount/unmount
+  -p, --path    mount this image instead of the default one
   -l, --live    force the read-only live path even if the VM looks shut down
   -u, --umount  unmount only, never mount
 
 Env overrides: WINMOUNT_IMG, WINMOUNT_DIR, WINMOUNT_NBD, WINMOUNT_PART,
-               WINMOUNT_FORCE=1 (mount a dirty volume read-write anyway)
+               WINMOUNT_FORMAT (skip format detection), WINMOUNT_FORCE=1
+               (mount a dirty volume read-write anyway)
 EOF
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        -p|--path)   shift
+                     [ $# -gt 0 ] || { echo "--path needs an image" >&2; exit 2; }
+                     IMG_PATH="$1" ;;
+        --path=*)    IMG_PATH="${1#--path=}" ;;
         -l|--live)   FORCE_LIVE=1 ;;
         -u|--umount) UMOUNT_ONLY=1 ;;
         -h|--help)   usage; exit 0 ;;
@@ -59,23 +72,40 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+IMG_PATH="$(readlink -f "$IMG_PATH" 2>/dev/null || printf '%s' "$IMG_PATH")"
+
+# Everything past here needs root, and prefixing each command with doas asks
+# for the password half a dozen times per run, so hand the job over once.
+if [ "$(id -u)" -ne 0 ]; then
+    exec doas env WINMOUNT_UID="$MOUNT_UID" WINMOUNT_GID="$MOUNT_GID" \
+        WINMOUNT_IMG="$IMG_PATH" WINMOUNT_DIR="$MOUNT_POINT" \
+        WINMOUNT_NBD="$NBD_DEV" WINMOUNT_PART="$PART_DEV" \
+        WINMOUNT_FORMAT="$IMG_FORMAT" WINMOUNT_FORCE="${WINMOUNT_FORCE:-0}" \
+        WINMOUNT_LIVE="$FORCE_LIVE" WINMOUNT_UMOUNT="$UMOUNT_ONLY" \
+        "$SELF"
+fi
+
 # --- helpers ---------------------------------------------------------------
 
 # Is some qemu process already holding this image open? Covers both libvirt
 # (which passes the disk inside a -blockdev JSON blob) and a hand-rolled
 # -drive line, so the match is a substring of argv rather than a whole arg.
+# A containerised VM (WinBoat) passes its own in-container path for the same
+# file, so match the basename too; a false positive only costs a read-only mount.
 vm_is_running() {
-    local img comm pidpath
+    local img base cmdline comm pidpath
     img="$(readlink -f "$1" 2>/dev/null || printf '%s' "$1")"
+    base="${img##*/}"
     for pidpath in /proc/[0-9]*; do
         comm="$(cat "$pidpath/comm" 2>/dev/null)" || continue
         case "$comm" in
             qemu-system-*|qemu-kvm*) ;;
             *) continue ;;
         esac
-        if tr '\0' '\n' < "$pidpath/cmdline" 2>/dev/null | grep -qF -- "$img"; then
-            return 0
-        fi
+        cmdline="$(tr '\0' '\n' < "$pidpath/cmdline" 2>/dev/null)" || continue
+        case "$cmdline" in
+            *"$img"*|*"$base"*) return 0 ;;
+        esac
     done
     return 1
 }
@@ -122,7 +152,7 @@ find_windows_partition() {
         name="${dev##*/}"
         size="$(dev_size "$name")"
         [ "$size" -gt 0 ] || continue
-        type="$(doas blkid -p -s TYPE -o value "$dev" 2>/dev/null)"
+        type="$(blkid -p -s TYPE -o value "$dev" 2>/dev/null)"
         [ "$type" = "ntfs" ] || continue
         if [ "$size" -gt "$best_size" ]; then
             best="$dev"
@@ -137,14 +167,14 @@ find_windows_partition() {
 
 if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
     echo "==> $MOUNT_POINT is mounted, unmounting..."
-    if ! doas umount "$MOUNT_POINT"; then
+    if ! umount "$MOUNT_POINT"; then
         echo "    Unmount failed. Something is still using it:"
-        doas fuser -vm "$MOUNT_POINT" 2>&1 | sed 's/^/    /'
+        fuser -vm "$MOUNT_POINT" 2>&1 | sed 's/^/    /'
         exit 1
     fi
 
     echo "==> Disconnecting $NBD_DEV..."
-    doas qemu-nbd --disconnect "$NBD_DEV"
+    qemu-nbd --disconnect "$NBD_DEV"
 
     # give the kernel a moment to release the device before unloading modules
     sleep 1
@@ -153,12 +183,12 @@ if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
     if fs_still_mounted "$FS_TYPE"; then
         echo "    (another $FS_TYPE mount is live, leaving $FS_MODULE loaded)"
     else
-        doas rmmod "$FS_MODULE" 2>/dev/null || echo "    ($FS_MODULE module busy, built in, or already unloaded)"
+        rmmod "$FS_MODULE" 2>/dev/null || echo "    ($FS_MODULE module busy, built in, or already unloaded)"
     fi
     if nbd_others_connected "$NBD_DEV"; then
         echo "    (another nbd device is connected, leaving nbd loaded)"
     else
-        doas rmmod nbd 2>/dev/null || echo "    (nbd module busy, in use, or already unloaded)"
+        rmmod nbd 2>/dev/null || echo "    (nbd module busy, in use, or already unloaded)"
     fi
 
     echo "==> Removing $MOUNT_POINT..."
@@ -178,6 +208,13 @@ fi
 if [ ! -e "$IMG_PATH" ]; then
     echo "==> Image not found: $IMG_PATH" >&2
     exit 1
+fi
+
+# --path can point at anything, so ask qemu what the image is instead of
+# assuming the default one's raw format.
+if [ -z "$IMG_FORMAT" ]; then
+    IMG_FORMAT="$(qemu-img info -U "$IMG_PATH" 2>/dev/null | awk -F': ' '/^file format:/ { print $2; exit }')"
+    IMG_FORMAT="${IMG_FORMAT:-raw}"
 fi
 
 if [ "$(dev_size "$NBD_DEV")" -gt 0 ]; then
@@ -202,8 +239,8 @@ else
 fi
 
 echo "==> Loading nbd and $FS_MODULE modules..."
-doas modprobe nbd max_part=8
-doas modprobe "$FS_MODULE"
+modprobe nbd max_part=8
+modprobe "$FS_MODULE"
 
 echo "==> Connecting $IMG_PATH to $NBD_DEV..."
 if [ "$READ_ONLY" -eq 1 ]; then
@@ -221,7 +258,7 @@ else
     CONNECT=(qemu-nbd --connect="$NBD_DEV" --format="$IMG_FORMAT" "$IMG_PATH")
 fi
 
-if ! doas "${CONNECT[@]}"; then
+if ! "${CONNECT[@]}"; then
     echo "    Connect failed. If this is a stale write-lock, check for a"
     echo "    lingering qemu process with: ps aux | grep qemu"
     echo "    If the VM really is running, force the read-only path: $0 --live"
@@ -234,7 +271,7 @@ fi
 echo "==> Waiting for partitions on $NBD_DEV..."
 if ! wait_for_dev "${NBD_DEV}p1"; then
     echo "    No partitions appeared -- connection didn't come up cleanly."
-    doas qemu-nbd --disconnect "$NBD_DEV"
+    qemu-nbd --disconnect "$NBD_DEV"
     exit 1
 fi
 
@@ -249,26 +286,27 @@ if [ -z "$PART_DEV" ]; then
     done
     if [ -z "$PART_DEV" ]; then
         echo "    No NTFS partition found on $NBD_DEV. Partition table:"
-        doas lsblk -o NAME,SIZE,FSTYPE,LABEL "$NBD_DEV" 2>&1 | sed 's/^/    /'
+        lsblk -o NAME,SIZE,FSTYPE,LABEL "$NBD_DEV" 2>&1 | sed 's/^/    /'
         echo "    Set WINMOUNT_PART to pick one by hand."
-        doas qemu-nbd --disconnect "$NBD_DEV"
+        qemu-nbd --disconnect "$NBD_DEV"
         exit 1
     fi
     echo "    Picked $PART_DEV ($(( $(dev_size "$PART_DEV") / 2097152 )) GiB)"
 elif ! wait_for_dev "$PART_DEV"; then
     echo "    $PART_DEV never appeared."
-    doas qemu-nbd --disconnect "$NBD_DEV"
+    qemu-nbd --disconnect "$NBD_DEV"
     exit 1
 fi
 
 echo "==> Creating $MOUNT_POINT..."
 mkdir -p "$MOUNT_POINT"
+chown "$MOUNT_UID:$MOUNT_GID" "$MOUNT_POINT"
 
 # ntfs3 refuses a read-write mount of a volume marked dirty, which is what you
 # get from hibernation or Windows' Fast Startup. 'force' overrides that; it's
 # safe alongside 'ro' because nothing gets written, but read-write on a dirty
 # volume can lose data, so that needs WINMOUNT_FORCE=1 set deliberately.
-NTFS_OPTS="uid=$(id -u),gid=$(id -g),umask=022,windows_names"
+NTFS_OPTS="uid=$MOUNT_UID,gid=$MOUNT_GID,umask=022,windows_names"
 if [ "$READ_ONLY" -eq 1 ]; then
     MOUNT_OPTS="ro,force,$NTFS_OPTS"
 elif [ "${WINMOUNT_FORCE:-0}" = "1" ]; then
@@ -278,8 +316,9 @@ else
 fi
 
 echo "==> Mounting $PART_DEV at $MOUNT_POINT ($MOUNT_OPTS)..."
-if ! doas mount -t "$FS_TYPE" "$PART_DEV" "$MOUNT_POINT" -o "$MOUNT_OPTS"; then
-    echo "    Mount failed."
+if ! mount -t "$FS_TYPE" "$PART_DEV" "$MOUNT_POINT" -o "$MOUNT_OPTS"; then
+    echo "    Mount failed. Kernel said:"
+    dmesg | tail -5 | sed 's/^/    /'
     if [ "$READ_ONLY" -eq 0 ]; then
         echo "    If it says the volume is dirty, Windows was hibernated or shut"
         echo "    down with Fast Startup. Boot it and run 'shutdown /s /t 0', or"
@@ -287,7 +326,7 @@ if ! doas mount -t "$FS_TYPE" "$PART_DEV" "$MOUNT_POINT" -o "$MOUNT_OPTS"; then
         echo "    Windows had in flight): WINMOUNT_FORCE=1 $0"
     fi
     echo "    Cleaning up nbd connection..."
-    doas qemu-nbd --disconnect "$NBD_DEV"
+    qemu-nbd --disconnect "$NBD_DEV"
     rmdir "$MOUNT_POINT" 2>/dev/null
     exit 1
 fi

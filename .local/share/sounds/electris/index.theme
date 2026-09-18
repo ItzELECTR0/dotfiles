@@ -1,0 +1,7 @@
+[Sound Theme]
+Name=Electris
+Comment=Windows hardware sounds plus a Minecraft notification
+Directories=stereo
+
+[stereo]
+OutputProfile=stereo

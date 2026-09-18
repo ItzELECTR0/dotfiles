@@ -1,13 +1,13 @@
 proton_version = "Proton-Tkg Latest"
 prefix_path = "~/.proton"
+shared_prefix = true
+auto_shortcuts = true
 use_umu = true
 mangohud = false
 gamescope = false
 gamemode = true
 
 [env]
-  PROTON_DISCORD_BRIDGE = "0"
-  PROTON_ENABLE_WAYLAND = "1"
   PROTON_USE_NTSYNC = "1"
   PROTON_USE_WOW64 = "1"
 
