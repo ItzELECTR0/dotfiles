@@ -2,7 +2,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "sonnet",
   "statusLine": {
     "type": "command",
     "command": "bash \"/home/ELECTRO/.claude/plugins/cache/caveman/caveman/0d95a81d35a9/src/hooks/caveman-statusline.sh\""
@@ -10,7 +10,8 @@
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true,
     "caveman@caveman": true,
-    "frontend-design@claude-plugins-official": true
+    "frontend-design@claude-plugins-official": true,
+    "unity@unity-agent-plugin": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
@@ -18,20 +19,28 @@
         "source": "github",
         "repo": "JuliusBrussee/caveman"
       }
+    },
+    "unity-agent-plugin": {
+      "source": {
+        "source": "github",
+        "repo": "Unity-Technologies/unity-agent-plugin"
+      }
     }
   },
   "effortLevel": "xhigh",
   "modelSettings": {
     "claude-sonnet-5": {
-      "effortLevel": "medium"
+      "effortLevel": "high"
     }
   },
   "promptSuggestionEnabled": false,
   "askUserQuestionTimeout": "10m",
+  "timeFormat": "24-hour",
   "theme": "dark",
   "editorMode": "normal",
   "preferredNotifChannel": "notifications_disabled",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "autoCompactWindow": 500000
 }

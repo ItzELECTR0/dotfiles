@@ -21,7 +21,7 @@
 		<config key="FilesystemOptions">compress-force=zstd:15</config>
 		<config key="ForceAutoDismount">1</config>
 		<config key="Language">system</config>
-		<config key="LastSelectedSlotNumber">2</config>
+		<config key="LastSelectedSlotNumber">1</config>
 		<config key="MaxVolumeIdleTime">60</config>
 		<config key="MountDevicesOnLogon">0</config>
 		<config key="MountFavoritesOnLogon">0</config>
@@ -35,7 +35,7 @@
 		<config key="StartOnLogon">0</config>
 		<config key="UseKeyfiles">0</config>
 		<config key="WipeCacheOnAutoDismount">1</config>
-		<config key="WipeCacheOnClose">0</config>
+		<config key="WipeCacheOnClose">1</config>
 		<config key="DefaultPRF">autodetection</config>
 	</configuration>
 </VeraCrypt>

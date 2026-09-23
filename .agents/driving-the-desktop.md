@@ -158,6 +158,21 @@ This is how to run something in a terminal the user can watch, rather than blind
 Remember that `kitty @ ls` reports window titles and working directories, and `get-text` reads
 scrollback, so scope the query and do not dump the lot.
 
+### Typing into a window
+
+`send-text` drives a shell in another kitty. Two things bite:
+
+- Enter is `\r`. A `\n` leaves the command sitting on the prompt line, typed but never submitted.
+- Send the command and the Enter as separate calls, with a `get-text` read of the prompt line in
+  between. PSReadLine's prediction list pops open while typing and the history here is full of
+  near-miss commands, so confirming what is actually on the line costs one call and stops the wrong
+  one from running.
+
+pwsh `Set-Location` does not move the process working directory, so `kitty @ ls` keeps reporting the
+old `cwd` for that window long after a `cd`. Read the prompt line instead of believing that field.
+
+See `remote-handover.md` for the procedure this exists to serve.
+
 ## Testing input safely, with a probe window
 
 Never test input against the user's own windows. Launch a throwaway one through kitty remote control,

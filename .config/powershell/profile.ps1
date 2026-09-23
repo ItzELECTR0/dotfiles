@@ -216,6 +216,7 @@ Write-Host "PowerShell $($PSVersionTable.PSVersion)"
 # DEFINE PROMPT
 # -------------------------------------------
 
+## This one is a backup when OhMyPosh isn't here
 #function prompt {
 #    $path = $(Get-Location)
 #    "$username@$systemname $path> "
@@ -244,6 +245,7 @@ Set-Alias q Get-Out
 Set-Alias quit Get-Out
 Set-Alias clear Start-CustomClear
 Set-Alias c Clear-Host
+Set-Alias rm Start-Removing
 
 # EDITOR SHORTCUTS
 Set-Alias code codium-insiders
@@ -380,6 +382,198 @@ function Start-CustomClear {
     Write-Host ""
 }
 
+function Start-Removing {
+    # Behave exactly like rm
+    if ($args.Count -eq 0) {
+        & /usr/bin/rm
+        return
+    }
+
+    $arguments = [string[]]$args
+    $recursive = $false
+    $oneFileSystem = $false
+    $afterSeparator = $false
+    $rmArguments = [System.Collections.Generic.List[string]]::new()
+    $rmArguments.Add('--verbose')
+
+    $targets = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($argument in $arguments) {
+        if (-not $afterSeparator -and $argument -eq '--') {
+            $afterSeparator = $true
+            $rmArguments.Add('--')
+            continue
+        }
+
+        if ($afterSeparator) {
+            $targets.Add($argument)
+            continue
+        }
+
+        if ($argument -eq '-') {
+            $targets.Add($argument)
+            continue
+        }
+
+        # Long options
+        if ($argument.StartsWith('--')) {
+            if ($argument -eq '--recursive') {
+                $recursive = $true
+            }
+
+            if ($argument -eq '--one-file-system') {
+                $oneFileSystem = $true
+            }
+
+            $rmArguments.Add($argument)
+            continue
+        }
+
+        # Short options
+        if ($argument.StartsWith('-')) {
+            if ($argument.Length -gt 1 -and $argument.Substring(1) -match '[rR]') {
+                $recursive = $true
+            }
+
+            $rmArguments.Add($argument)
+            continue
+        }
+
+        # Normal operand
+        $targets.Add($argument)
+    }
+
+    $resolvedTargets = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($target in $targets) {
+        $resolved = @()
+
+        if ($target.IndexOfAny([char[]]'*?[]') -ge 0) {
+            $resolved = @(
+                Get-Item -Path $target -Force -ErrorAction SilentlyContinue |
+                ForEach-Object FullName
+            )
+        }
+        else {
+            try {
+                $resolved = @(
+                    Get-Item -LiteralPath $target -Force -ErrorAction Stop |
+                    ForEach-Object FullName
+                )
+            }
+            catch {
+                # Leave inaccessible targets alone
+            }
+        }
+
+        if ($resolved.Count -gt 0) {
+            foreach ($path in $resolved) {
+                $resolvedTargets.Add($path)
+                $rmArguments.Add($path)
+            }
+        }
+        else {
+            $resolvedTargets.Add($target)
+            $rmArguments.Add($target)
+        }
+    }
+
+    $activity = 'Removing'
+
+    # Count work before starting rm
+    Write-Progress `
+        -Activity $activity `
+        -Status 'Counting items...'
+
+    [long]$total = 0
+    $countUnknown = $false
+
+    foreach ($target in $resolvedTargets) {
+        if ($recursive -and $target -eq '/') {
+            $countUnknown = $true
+            continue
+        }
+
+        if ($recursive) {
+            $findArguments = [System.Collections.Generic.List[string]]::new()
+            $findArguments.Add('-P')
+
+            if ($oneFileSystem) {
+                $findArguments.Add('-xdev')
+            }
+
+            $findArguments.Add('--')
+            $findArguments.Add($target)
+            $findArguments.Add('-printf')
+            $findArguments.Add('x')
+
+            $countText = (
+                & /usr/bin/find @findArguments 2>$null |
+                & /usr/bin/wc -c
+            ).Trim()
+
+            if ($countText -match '^\d+$') {
+                $total += [long]$countText
+            }
+            else {
+                $countUnknown = $true
+            }
+        }
+        else {
+            $total++
+        }
+    }
+
+    [long]$removed = 0
+
+    & /usr/bin/env LC_ALL=C /usr/bin/rm @rmArguments 2>&1 |
+        ForEach-Object {
+            $line = $_.ToString()
+
+            if ($line -match '^\s*removed(?: directory)?\s+') {
+                $removed++
+
+                if ($total -gt 0) {
+                    $percent = [math]::Min(
+                        100,
+                        [math]::Floor(($removed * 100.0) / $total)
+                    )
+
+                    Write-Progress `
+                        -Activity $activity `
+                        -Status "$removed / $total items removed" `
+                        -PercentComplete $percent
+                }
+                else {
+                    Write-Progress `
+                        -Activity $activity `
+                        -Status "$removed item(s) removed..."
+                }
+            }
+            else {
+                Write-Host $line
+            }
+        }
+
+    $exitCode = $LASTEXITCODE
+
+    if ($total -gt 0) {
+        Write-Progress `
+            -Activity $activity `
+            -Status "$removed / $total items removed" `
+            -PercentComplete 100 `
+            -Completed
+    }
+    else {
+        Write-Progress `
+            -Activity $activity `
+            -Completed
+    }
+
+    # Preserve $LASTEXITCODE
+    $global:LASTEXITCODE = $exitCode
+}
+
 function Start-Git-Commit {
     param (
         [Parameter(Mandatory, Position = 0)]
@@ -512,7 +706,7 @@ function Switch-Git-Origin {
     $currentUrl = git remote get-url origin 2>$null
     if ($LASTEXITCODE -ne 0) { $currentUrl = $null }
 
-    # No argument: just report what origin currently is
+    # Report what origin currently is
     if ([string]::IsNullOrWhiteSpace($Target)) {
         if ($currentUrl) {
             Write-Host "origin  $currentUrl"
@@ -536,16 +730,15 @@ function Switch-Git-Origin {
     }
 
     if (-not $remoteHost) {
-        # Bare URL, handed through untouched
         $newUrl = $Target
     }
     else {
         if ($Target -match '/') {
-            # Explicit owner/repo, taken at face value
+            # `owner/repo` taken at face value
             $slug = $Target.Trim('/')
         }
         else {
-            # Username only: keep this repo's name, swap the owner, verify the fork exists
+            # Username only
             if (-not $currentUrl) {
                 Write-Error "No 'origin' remote to take the repository name from. Pass <user>/<repo> instead."
                 return
@@ -592,7 +785,7 @@ function Switch-Git-Origin {
                 $verified = $true
             }
             else {
-                # No API client: fall back to proving the remote merely exists
+                # Fall back to proving the remote merely exists with no API client
                 git ls-remote --exit-code "git@${remoteHost}:$slug" 2>$null | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     Write-Error "'$Target' has no repository named '$repoName' on $remoteHost."

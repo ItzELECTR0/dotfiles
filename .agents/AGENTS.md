@@ -26,6 +26,9 @@ Read `~/.agents/processes.md` before killing anything or starting long-running w
 Read `~/.agents/toolchains.md` for package management, installed language tooling, and where
 projects live.
 
+Read `~/.agents/remote-handover.md` when the user says anything implying they are leaving the
+machine, or asks for a session opened or resumed in the spare terminal for use from the mobile app.
+
 ## Work toward the outcome
 
 The user usually describes the outcome, not every contingency. Optimize for the best result, not

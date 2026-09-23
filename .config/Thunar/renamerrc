@@ -16,7 +16,7 @@ OffsetMode=THUNAR_SBR_OFFSET_MODE_LEFT
 
 [ThunarSbrReplaceRenamer]
 CaseSensitive=FALSE
-Replacement=BestFriends
-Pattern=YunYun
+Replacement=No Ko
+Pattern=no Ko
 Regexp=FALSE
 

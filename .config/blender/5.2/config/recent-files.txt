@@ -1,3 +1,5 @@
+/home/ELECTRO/Development/Projects/Mods/EldenRing/JourneyWithAsimi/.work/models/asimi-v7/Asimi.blend
+/home/ELECTRO/Development/Projects/Mods/EldenRing/JourneyWithAsimi/.work/models/asimi-v8/Asimi.blend
 /home/ELECTRO/Development/Projects/Mods/EldenRing/JourneyWithAsimi/.work/models/asimi-v5/Asimi.blend
 /home/ELECTRO/Development/Projects/Mods/EldenRing/JourneyWithAsimi/.work/models/asimi-v4/Asimi.blend
 /home/ELECTRO/Development/Projects/Mods/EldenRing/JourneyWithAsimi/.work/models/asimi-v3/Asimi.blend
