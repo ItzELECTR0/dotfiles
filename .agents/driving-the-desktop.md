@@ -3,11 +3,69 @@
 How to observe and act on the running session without hijacking it. Read `hyprland.md` first for the
 Lua dispatch syntax and the permission model.
 
-## Rule zero
+## Rule zero: do not disturb
 
-This is the user's live daily-driver session, not a test harness. Never take focus, never move or
-resize a window they are using, never capture the screen for your own exploration, and never restart
-the compositor or the shell. Prefer a call that reports something over a call that changes something.
+This is the user's only machine and they are usually working, browsing or gaming on it while you run.
+The default is do-not-disturb: nothing you do may move the pointer, change focus, raise or move a
+window they are using, or capture their screen. Prefer a call that reports something over a call that
+changes something.
+
+Hyprland has exactly one seat, so one pointer and one keyboard focus shared by every input device.
+There is no second cursor to be had. Any click, whether from `ydotool` or `hl.dsp.cursor.*`, moves
+the user's own cursor and focus.
+
+Allowed by default, because none of it touches the cursor or focus:
+
+- Keys aimed at a named window with `send_shortcut`, described below.
+- Accessibility through AT-SPI (`gi.repository.Atspi`, installed and reachable) to read and press
+  widgets in GTK and Qt apps by name.
+- The agent session, a headless desktop of your own described below. This is the default place for
+  anything that needs a GUI.
+
+Anything that uses the live pointer or focus, including `ydotool` clicks and the probe window below,
+needs the user's explicit permission in the current conversation. That usually means they are stepping
+away (see `remote-handover.md`). Permission covers that one task, not the rest of the session.
+
+## The agent session
+
+`scripts/desktop/agent-session.sh` runs a headless `sway` as the transient user unit
+`agent-session`. It has its own seat, cursor and focus, renders with pixman so it stays off the GPU,
+and never appears on the user's monitors. Verified: typing, clicking and capturing inside it left the
+live cursor and focus untouched.
+
+```bash
+S=~/.dotfiles/scripts/desktop/agent-session.sh
+$S start                  # prints the exports, and is a no-op if already running
+eval "$($S env)"          # WAYLAND_DISPLAY, DISPLAY, SWAYSOCK and the private bus
+$S run kitty --class foo  # launch inside it, as a unit bound to the session
+grim "$SP/shot.png"       # see it; SP is the session scratchpad
+$S input type "text"      # newlines and tabs become Return and Tab
+$S input key ctrl+shift+t Return
+$S input move 400 500     # absolute, in session pixels
+$S input click [left|right|middle|back|forward]   # also down, up
+$S input scroll 3         # positive is down; hscroll for sideways
+swaymsg -t get_tree       # windows, focus and geometry
+$S stop                   # stops the session and everything launched with run
+```
+
+Input goes through `agent-input`, a small C helper in `scripts/desktop/agent-input/` that `start`
+builds with `make` and runs for the whole session. It holds one virtual keyboard and one virtual
+pointer, so every app sees both devices from the moment it starts; apps like kitty ignore devices
+that appear later, which is why one-shot `wtype` and `wlrctl` are unreliable here. The keyboard uses
+the live desktop's `kb_layout` and `kb_variant`, read from `hyprctl`, and never changes keymap.
+`type` refuses the whole string if any character is on no layout, rather than typing part of it.
+
+X11 works. `start` runs `xwayland-satellite` on the first free display from `:42`, and `run` points
+`DISPLAY` at it. Typing, clicks and scrolling are verified in an X11 kitty. `xdotool` input does not
+work there, because this Xwayland routes XTEST through libei, which has no server (`EI setup
+failed`); use `agent-input`.
+
+Apps launched with `run` get a private D-Bus session bus, so single-instance apps start a fresh copy
+instead of raising the user's. Still shared: the filesystem, app profiles and config under `~`, and
+audio, since `XDG_RUNTIME_DIR` carries the PipeWire socket. Give apps a throwaway profile where they
+have one, and mute anything that might play sound.
+
+`ydotool` is a real kernel input device and always lands in the live session, never in this one.
 
 ## Sending keys
 
@@ -84,7 +142,7 @@ Both work, and they are good at different things.
 | Clicks and scroll | not possible | yes |
 
 Default to `send_shortcut` for keys, because not stealing focus is worth a lot on a live session.
-Reach for `ydotool` when you need a lot of text, or a click.
+`ydotool` goes to whatever is focused and moves the real cursor, so it is for permitted sessions only.
 
 ## The lesson that cost the most time here
 
@@ -136,8 +194,9 @@ directly.
 The capture tools are installed and already hold screencopy permission, so they capture with no
 prompt. See `variables/permissions.lua` for which binaries are granted.
 
-Permission granted is not permission earned. Capture only when the user asks for a screenshot, keep
-it in the session scratchpad, and delete it when done.
+Permission granted is not permission earned. Capture the live screen only when the user asks for a
+screenshot, keep it in the session scratchpad, and delete it when done. The agent session is yours to
+capture freely.
 
 ## Kitty remote control
 
@@ -193,8 +252,8 @@ user's layout. Record the active window address first and restore focus at the e
 happens even on failure.
 
 `--keep-focus` does not hold for `--type=os-window`: the probe takes focus anyway. Anything needing
-the probe unfocused has to move focus back explicitly after it opens. Say so before running this,
-because it does briefly disturb the session.
+the probe unfocused has to move focus back explicitly after it opens. Because it steals focus, it needs
+permission under rule zero.
 
 ## Clipboard
 

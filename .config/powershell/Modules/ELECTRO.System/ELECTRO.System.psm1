@@ -109,7 +109,7 @@ function Start-PodmanContainerUpdate {
         
         Push-Location $containerPath
         try {
-            podman-compose down 2>&1 | Out-Null
+            podman compose down 2>&1 | Out-Null
             Write-Host "  ✓ $container stopped" -ForegroundColor Green
         }
         catch {
@@ -134,7 +134,7 @@ function Start-PodmanContainerUpdate {
         
         Push-Location $containerPath
         try {
-            podman-compose pull 2>&1 | Out-Null
+            podman compose pull 2>&1 | Out-Null
             Write-Host "  ✓ $container images pulled" -ForegroundColor Green
         }
         catch {
@@ -158,7 +158,7 @@ function Start-PodmanContainerUpdate {
         
         Push-Location $containerPath
         try {
-            podman-compose up -d 2>&1 | Out-Null
+            podman compose up -d 2>&1 | Out-Null
             Write-Host "  ✓ $container started" -ForegroundColor Green
         }
         catch {

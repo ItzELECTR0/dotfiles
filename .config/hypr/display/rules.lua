@@ -2,9 +2,9 @@
 hl.workspace_rule({workspace = 1, monitor = "DP-1", default = true, persistent = true})
 hl.workspace_rule({workspace = 2, monitor = "DP-1", persistent = true})
 hl.workspace_rule({workspace = 3, monitor = "DP-1", persistent = true})
-hl.workspace_rule({workspace = 4, monitor = "HDMI-A-1", persistent = true})
-hl.workspace_rule({workspace = 5, monitor = "HDMI-A-1", persistent = true})
-hl.workspace_rule({workspace = 6, monitor = "HDMI-A-1", default = true, persistent = true})
+hl.workspace_rule({workspace = 4, monitor = "HDMI-A-1", layout = "lua:vstack", persistent = true})
+hl.workspace_rule({workspace = 5, monitor = "HDMI-A-1", layout = "lua:vstack", persistent = true})
+hl.workspace_rule({workspace = 6, monitor = "HDMI-A-1", layout = "lua:vstack", default = true, persistent = true})
 
 ---[===Layer=Rules===]---
 hl.layer_rule({match = {namespace = "^noctalia-backdrop.*$"}, ignore_alpha = 0.5, blur = true, blur_popups = true})

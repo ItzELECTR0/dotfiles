@@ -19,7 +19,8 @@ Read `~/.agents/hyprland.md` before reading or writing anything under `~/.config
 using `hyprctl`.
 
 Read `~/.agents/driving-the-desktop.md` before sending input, controlling windows, capturing the
-screen, or notifying the user.
+screen, notifying the user, or doing anything that needs a GUI. The desktop is do-not-disturb by
+default.
 
 Read `~/.agents/processes.md` before killing anything or starting long-running work.
 

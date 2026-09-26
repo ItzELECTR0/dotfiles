@@ -44,13 +44,20 @@ local function toggle_power(display)
     end
 end
 
-local shell_state = 0
-
-local function is_running(process)
-    local handle = io.popen("pgrep -x " .. process)
+-- Match the executable at the start of the command line; the name is too long for pgrep -x.
+local function is_running(name)
+    local handle = io.popen("pgrep -f '^([^ ]*/)?" .. name .. "( |$)'")
     local result = handle:read("*a")
     handle:close()
     return result ~= ""
+end
+
+local function wallpaper_running()
+    return is_running("linux-wallpaperengine")
+end
+
+local function shell_running()
+    return is_running(noctaliaBin)
 end
 
 local function start_WE()
@@ -58,34 +65,33 @@ local function start_WE()
     os.execute("linux-wallpaperengine --silent --disable-mouse --disable-parallax --set-property timeofday=3 --screen-root HDMI-A-1 --bg 2504353624 &")
 end
 
+local function stop_WE()
+    os.execute("killall -9 linux-wallpaperengine")
+end
+
 local function start_QS()
     os.execute(noctaliaBin .. " &")
 end
 
+local function stop_QS()
+    os.execute("killall -9 " .. noctaliaBin)
+end
+
 -- App Control --
 hl.bind(MOD .. " + W", function()
-    if shell_state == 0 then
-        os.execute("killall -9 linux-wallpaperengine")
-        shell_state = 1
-    elseif shell_state == 1 then
-        os.execute("killall -9 " .. noctaliaBin)
-        shell_state = 2
-    else
-        start_WE()
-        start_QS()
-        shell_state = 0
-    end
+    if wallpaper_running() then stop_WE() else start_WE() end
+end)
+hl.bind("CTRL + W", function()
+    if shell_running() then stop_QS() else start_QS() end
 end)
 hl.bind(MOD .. " + SHIFT + W", function()
-    if shell_state == 0 then
-        return
-    elseif shell_state == 1 then
-        start_WE()
-        shell_state = 0
-    elseif shell_state == 2 then
+    local we, qs = wallpaper_running(), shell_running()
+    if not we and not qs then
         start_WE()
         start_QS()
-        shell_state = 0
+    else
+        if we then stop_WE() end
+        if qs then stop_QS() end
     end
 end)
 hl.bind(MOD .. " + S", hl.dsp.exec_cmd(music))

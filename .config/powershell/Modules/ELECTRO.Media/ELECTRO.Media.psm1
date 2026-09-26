@@ -10,7 +10,6 @@ function Start-Compressing {
         [Parameter(Position = 2)]
         [int]$AudioBitrate = 160,
 
-        # h264: safe default for Discord; h265: ~25% more efficient;
         [ValidateSet('h264', 'h265')]
         [string]$Codec = 'h265',
 
@@ -132,7 +131,7 @@ function Start-Compressing {
     if ($outH -ne $srcH) { $filters += "scale=-2:${outH}:flags=lanczos" }
     $vfArgs = if ($filters.Count) { @('-vf', ($filters -join ',')) } else { @() }
 
-    # tag colour only if the source left it unspecified
+    # Tag colour only if the source left it unspecified
     $colorArgs = @()
     if (-not $vs.color_primaries -or $vs.color_primaries -eq 'unknown') {
         $colorArgs = @('-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709')
@@ -236,7 +235,7 @@ function Start-Compressing {
             if ($size -le $limitBytes -and $size -ge $budget * 0.97) { break }
             if ($i -eq $Attempts) { break }
 
-            # measure the encoder's actual delivery and solve for the next request
+            # Measure the encoder's actual delivery and solve for the next request
             $actualVideoBps = ConvertTo-Num ((& ffprobe -v error -select_streams v:0 `
                 -show_entries stream=bit_rate -of csv=p=0 -i $OutputFile 2>$null | Out-String).Trim())
             if ($actualVideoBps -le 0) { $actualVideoBps = $videoBps }

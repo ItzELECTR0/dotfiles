@@ -104,6 +104,12 @@ None of that is worth restating here because it changes. Read `display/monitors.
 `display/rules.lua`, or `hyprctl monitors -j`, and follow the existing section comment banners when
 adding a rule.
 
+Custom tiling layouts live in `display/layouts.lua`, registered with `hl.layout.register(name, ...)`.
+Hyprland exposes them as `lua:<name>`, and that prefixed name is what a workspace rule's `layout`
+must use. The bare name silently falls back to dwindle with no config error. `hyprctl workspacerules`
+does not print the `layout` field; check `tiledLayout` in `hyprctl workspaces -j` instead. Lua layout
+state resets on every reload.
+
 ## Permissions are enforced, and only load at compositor start
 
 `ecosystem:enforce_permissions` is true and `variables/permissions.lua` is explicit rather than
@@ -154,6 +160,7 @@ user has open, which is private. Query with a filter for the window you actually
 
 A Quickshell-based shell provides the bar, launcher, control centre, notifications and lock screen. A
 wallpaper daemon, a polkit agent, the portals, a clipboard persister, XWayland and several user
-applications are all started from `programs/autostart.lua`, and a keybind cycles them off and on
-through the user's own `killall -9` logic. Read that file rather than guessing, and do not kill any
+applications are all started from `programs/autostart.lua`. Keybinds in `input/keybinds.lua` toggle
+the wallpaper and the shell off and on with the user's own `killall -9` logic, deciding from `pgrep`
+whether each is running. Read that file rather than guessing, and do not kill any
 of it yourself.

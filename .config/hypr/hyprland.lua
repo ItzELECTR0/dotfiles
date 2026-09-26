@@ -24,6 +24,7 @@ require("animations/animation")
 -----------
 
 require("display/monitors")
+require("display/layouts")
 require("display/rules")
 
 ------------
