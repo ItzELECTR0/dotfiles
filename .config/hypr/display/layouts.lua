@@ -1,6 +1,4 @@
 ---[===Vertical=Stack===]---
--- Equal-height rows. Arriving windows (spawned or dropped) slot in at the cursor when it is over the
--- stack, like dwindle, otherwise above the bottom window so the third lands in the middle.
 local orders = {}
 
 local function key(target)

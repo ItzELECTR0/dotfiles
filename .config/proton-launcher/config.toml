@@ -1,4 +1,4 @@
-proton_version = "Proton-Tkg Latest"
+proton_version = "Proton-CachyOS Latest"
 prefix_path = "~/.proton"
 shared_prefix = true
 auto_shortcuts = true

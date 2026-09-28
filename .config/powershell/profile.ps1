@@ -125,7 +125,9 @@ Set-Alias rm Start-Removing
 
 # EDITOR SHORTCUTS
 Set-Alias code codium-insiders
-Set-Alias cc claude
+Set-Alias cc Start-Claude
+Set-Alias cx Start-Codex
+Set-Alias gk Start-Grok
 Set-Alias gemini agy
 Set-Alias lgit lazygit
 Set-Alias top btop

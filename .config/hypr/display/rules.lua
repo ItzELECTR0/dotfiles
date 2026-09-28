@@ -38,12 +38,10 @@ hl.window_rule({match = {class = "librewolf"}, opaque = true, no_initial_focus =
 hl.window_rule({match = {class = "librewolf", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
 hl.window_rule({match = {class = "zen|zen-twilight"}, opaque = true, no_initial_focus = true, monitor = "DP-1", workspace = 1})
 hl.window_rule({match = {class = "zen|zen-twilight", title = ".*Private Browsing.*"}, monitor = "DP-1", workspace = 2})
--- Minecraft: modern (GLFW class "Minecraft* 26.2" / "Minecraft 1.21.4"), legacy LWJGL2 and launcher-wrapper classes
 hl.window_rule({match = {class = "^([Mm]inecraft\\*?(\\s.*)?|com\\.mojang\\.[Mm]inecraft.*|com-moulberry-pandora-LaunchWrapper|net-minecraft-client-main-Main|net\\.minecraft\\.client\\.main\\.Main|org-(prism|multimc|poly)launcher-EntryPoint)$"}, immediate = true, monitor = "DP-1", no_initial_focus = true, fullscreen = true, workspace = "2 silent"})
--- Fallback: XWayland windows that map before WM_CLASS is set, matched on the version title instead
 hl.window_rule({match = {title = "^[Mm]inecraft\\*?\\s\\d[\\w.+-]*$"}, immediate = true, monitor = "DP-1", no_initial_focus = true, workspace = "2 silent"})
 hl.window_rule({match = {class = "[Pp]andora[Ll]auncher", title = "Minecraft Game Output"}, monitor = "DP-1", no_initial_focus = true, workspace = "2 silent"})
-hl.window_rule({match = {class = "Unity"}, monitor = "DP-1", no_initial_focus = true, workspace = 3})
+hl.window_rule({match = {class = "Unity|[Uu]nity[Hh]ub-[Uu]nity-[Ee]ditor-.*"}, monitor = "DP-1", no_initial_focus = true, workspace = 3})
 hl.window_rule({match = {class = "steam", title = "Steam Big Picture Mode"}, monitor = "DP-1", fullscreen = true, workspace = 2})
 hl.window_rule({match = {initial_class = "wondershare filmora.exe", class = "wondershare filmora.exe", title = "Wondershare Filmora"}, tile = true, opacity = 1.0, no_blur = true, no_initial_focus = true, monitor = "DP-1", workspace = 2})
 
@@ -104,4 +102,4 @@ hl.window_rule({match = {title = "[Ss]team"}, border_color = "rgba(33ccffee)"})
 hl.window_rule({match = {class = "modrinth-app"}, border_color = "rgba(1bd96aff)"})
 hl.window_rule({match = {class = "[Dd]iscord-[Cc]anary|[Dd]iscord"}, border_color = "rgba(faa61aff)"})
 hl.window_rule({match = {class = "codium-insiders"}, border_color = "rgba(22a455ff)"})
-hl.window_rule({match = {class = "[Uu]nity|[Uu]nity[Hh]ub"}, border_color = "rgba(ffffffbf)"})
+hl.window_rule({match = {class = "[Uu]nity|[Uu]nity[Hh]ub|[Uu]nity[Hh]ub-[Uu]nity-[Ee]ditor-.*"}, border_color = "rgba(ffffffbf)"})

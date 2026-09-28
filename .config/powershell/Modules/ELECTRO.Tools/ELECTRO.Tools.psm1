@@ -30,6 +30,36 @@ function Open-Directory {
     }
 }
 
+function Start-Claude {
+    if ($env:UNSNOOZE_ACTIVE -eq '1' -or
+        -not (Test-Path '/usr/lib/node_modules/unsnooze/bin/unsnooze.js')) {
+        & (Get-Command claude -CommandType Application | Select-Object -First 1).Source @args
+        return $LASTEXITCODE
+    }
+
+    unsnooze _run claude @args
+}
+
+function Start-Codex {
+    if ($env:UNSNOOZE_ACTIVE -eq '1' -or
+        -not (Test-Path '/usr/lib/node_modules/unsnooze/bin/unsnooze.js')) {
+        & (Get-Command codex -CommandType Application | Select-Object -First 1).Source @args
+        return $LASTEXITCODE
+    }
+
+    unsnooze _run codex @args
+}
+
+function Start-Grok {
+    if ($env:UNSNOOZE_ACTIVE -eq '1' -or
+        -not (Test-Path '/usr/lib/node_modules/unsnooze/bin/unsnooze.js')) {
+        & (Get-Command grok -CommandType Application | Select-Object -First 1).Source @args
+        return $LASTEXITCODE
+    }
+
+    unsnooze _run grok @args
+}
+
 function Start-SteamDepotBuild {
     bash -c "$HOME/.dotfiles/scripts/build-steam-packages.sh"
 }
